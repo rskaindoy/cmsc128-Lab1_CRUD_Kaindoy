@@ -14,6 +14,12 @@ const taskList = document.getElementById("task-list");
 
 // open the add-task panel
 addTaskButton.addEventListener("click", () => {
+    taskForm.reset();
+    delete taskForm.dataset.editingID;
+
+    document.getElementById("task-panel-title").textContent = "Add a Task";
+    document.getElementById("task-submit-button").textContent = "Add Task";
+
     addTaskPanel.style.display = "block";
 });
 
@@ -23,8 +29,7 @@ closeTaskPanel.addEventListener("click", () => {
 });
 
 
-// CREATE TASK ---------------------
-// submit filled-out task form
+// MANIPULATE TASK FORM ---------------------
 taskForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
@@ -34,30 +39,50 @@ taskForm.addEventListener("submit", async (event) => {
     const priority = document.getElementById("prio").value;
     const tag = document.getElementById("tag").value;
 
-    // send task to backend
-    const response = await fetch(`${API_URL}/tasks`, {
-        method: "POST",
-        headers:{"Content-Type": "application/json"},
-        body: JSON.stringify({
-            title: title,
-            due: due,
-            priority: priority,
-            tag: tag
-        })
-    });
+    const editingID = taskForm.dataset.editingID;
 
-    // cgeck if task was created successfully
+    let response;
+
+    if (editingID){
+        // update existing task
+        response = await fetch(`${API_URL}/tasks/${editingID}`,{
+            method: "PUT",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                title: title,
+                due: due,
+                priority: priority,
+                tag: tag
+            })
+        });
+    } else {
+        // create new task
+        response = await fetch(`${API_URL}/tasks`, {
+            method: "POST",
+            headers:{"Content-Type": "application/json"},
+            body: JSON.stringify({
+                title: title,
+                due: due,
+                priority: priority,
+                tag: tag
+            })
+        });
+    }
+
+    // check if task was updated or created successfully
     if (response.ok){
-        console.log("Task created");
+        console.log(editingID ? "Task updated" : "Task created");
 
         // clear the form and close the panel
         taskForm.reset();
+        delete taskForm.dataset.editingID;      // makes editingID undefined, which is also default
+
         addTaskPanel.style.display = "none";
 
         // refresh task list
         loadTasks();
     } else {
-        console.error("Failed to create task.")
+        console.error("Failed to save task.")
     }
 });
 
@@ -78,7 +103,7 @@ async function loadTasks() {
 }
 
 // display tasks
-async function renderTasks(tasks) {
+function renderTasks(tasks) {
     taskList.innerHTML = "";
 
     if (tasks.length === 0){
@@ -95,11 +120,44 @@ async function renderTasks(tasks) {
             <h3>${task.title}</h3>
             <p>Due: ${task.due || "No due date"}</p>
             <p>Priority: ${task.priority || "None"}</p>
-            <p>Category: ${task.category || "None"}</p>
+            <p>Category: ${task.tag || "None"}</p>
+
+            <button class="edit-task-button" data-id="${task.task_id}">Edit</button>
         `;
 
         taskList.appendChild(taskCard);
     });
+
+    // add event listener to 'EDIT' buttons
+    const editButtons = document.querySelectorAll(".edit-task-button");
+
+    editButtons.forEach((button) => {
+        button.addEventListener("click", () => {
+            const taskID = button.dataset.id;
+
+            openEditTaskPanel(taskID, tasks);
+        });
+    });
+}
+
+function openEditTaskPanel(taskID, tasks) {
+    const task = tasks.find((task) => task.task_id == taskID);
+
+    if (!task){
+        return;
+    }
+
+    document.getElementById("task-panel-title").textContent = "Edit Task";
+    document.getElementById("task-submit-button").textContent = "Save Changes";
+
+    document.getElementById("title").value = task.title;
+    document.getElementById("due").value = task.due || "";
+    document.getElementById("prio").value = task.priority || "Medium";
+    document.getElementById("tag").value = task.tag || "Others";
+
+    addTaskPanel.style.display = "block";
+
+    taskForm.dataset.editingID = taskID;
 }
 
 // INITIAL LOAD ---------------------

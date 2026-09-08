@@ -55,6 +55,31 @@ app.get("/api/tasks", (req, res) => {
     res.json(tasks);
 });
 
+
+// update a certain task
+app.put("/api/tasks/:id", (req, res) => {
+    const { id } = req.params;
+    const { title, due, priority, tag } = req.body;
+
+    const statement = db.prepare(`
+        UPDATE Task
+        SET title = ?, due = ?, priority = ?, tag = ?
+        WHERE task_id = ?
+    `);
+
+    const result = statement.run(title, due, priority, tag, id);
+
+    if (result.changes === 0) {
+        return res.status(404).json({
+            message: "Task not found"
+        });
+    }
+
+    res.json({
+        message: "Task updated!"
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
