@@ -8,6 +8,9 @@ const addTaskButton = document.getElementById("add-task-button");
 const closeTaskPanel = document.getElementById("close-task-panel");
 const addTaskPanel = document.getElementById("add-task-panel");
 const taskForm = document.getElementById("task-form");
+const taskList = document.getElementById("task-list");
+
+// MANIPULATE TASK PANEL ---------------------
 
 // open the add-task panel
 addTaskButton.addEventListener("click", () => {
@@ -19,6 +22,8 @@ closeTaskPanel.addEventListener("click", () => {
     addTaskPanel.style.display = "none";
 });
 
+
+// CREATE TASK ---------------------
 // submit filled-out task form
 taskForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -48,19 +53,57 @@ taskForm.addEventListener("submit", async (event) => {
         // clear the form and close the panel
         taskForm.reset();
         addTaskPanel.style.display = "none";
+
+        // refresh task list
+        loadTasks();
     } else {
         console.error("Failed to create task.")
     }
 });
 
-// TODO: create func to fetch tasks
-// async function loadTasks() {}
 
-// TODO: create func to display tasks
-// async function renderTasks() {}
+// READ TASKS ---------------------
+// fetch tasks from database
+async function loadTasks() {
+    const response = await fetch(`${API_URL}/tasks`);
 
-// TODO: create func to add a task
-// async function addTask() {}
+    if (!response.ok) {
+        console.error("Failed to load tasks.");
+        return;
+    }
+
+    const tasks = await response.json()
+
+    renderTasks(tasks);
+}
+
+// display tasks
+async function renderTasks(tasks) {
+    taskList.innerHTML = "";
+
+    if (tasks.length === 0){
+        taskList.innerHTML = "<p>No tasks yet.</p>";
+        return;
+    }
+
+    tasks.forEach((task) => {
+        const taskCard = document.createElement("div");
+        
+        taskCard.classList.add("task-card");
+
+        taskCard.innerHTML = `
+            <h3>${task.title}</h3>
+            <p>Due: ${task.due || "No due date"}</p>
+            <p>Priority: ${task.priority || "None"}</p>
+            <p>Category: ${task.category || "None"}</p>
+        `;
+
+        taskList.appendChild(taskCard);
+    });
+}
+
+// INITIAL LOAD ---------------------
+loadTasks();
 
 // TODO: create func to edit a task
 // async function updateTask(id, task) {}
