@@ -65,6 +65,11 @@ input, select, button {
     cursor: pointer;
 }
 
+.done-task-checkbox {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
 /* TODO: add priority styles */
 
 /* TODO: add completed-task styles */

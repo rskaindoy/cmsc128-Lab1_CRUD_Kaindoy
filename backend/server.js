@@ -96,6 +96,31 @@ app.delete("/api/tasks/:id", (req, res) => {
     });
 });
 
+// CHECK / UNCHECK TASKS
+app.put("/api/tasks/:id/done", (req, res) => {
+    const { id } = req.params;
+    const { is_done } = req.body;
+
+    const statement = db.prepare(`
+        UPDATE Task
+        SET is_done = ?
+        WHERE task_id = ?
+        AND deleted_at IS NULL
+    `);
+
+    const result = statement.run(is_done ? 1 : 0, id);
+
+    if (result.changes === 0) {
+        return res.status(404).json({
+            message: "Task not found"
+        });
+    }
+
+    res.json({
+        message: is_done ? "Task marked as done!" : "Task marked as not done!"
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

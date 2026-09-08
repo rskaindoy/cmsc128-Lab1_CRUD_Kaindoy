@@ -117,7 +117,11 @@ function renderTasks(tasks) {
         taskCard.classList.add("task-card");
 
         taskCard.innerHTML = `
-            <h3>${task.title}</h3>
+            <label>
+                <input type="checkbox" class="done-task-checkbox" data-id="${task.task_id}" ${task.is_done ? "checked" : ""}>
+                ${task.title}
+            </label>
+
             <p>Due: ${task.due || "No due date"}</p>
             <p>Priority: ${task.priority || "None"}</p>
             <p>Category: ${task.tag || "None"}</p>
@@ -148,6 +152,18 @@ function renderTasks(tasks) {
             const taskID = button.dataset.id;
 
             await deleteTask(taskID);
+        });
+    });
+
+    // add event listener to MARK checkboxes
+    const doneCheckboxes = document.querySelectorAll(".done-task-checkbox");
+
+    doneCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener("change", async () => {
+            const taskID = checkbox.dataset.id;
+            const isDone = checkbox.checked;
+
+            await doneTask(taskID, isDone);
         });
     });
 }
@@ -189,6 +205,25 @@ async function deleteTask(taskID) {
     // refresh task list
     loadTasks();
 }
+
+async function doneTask(taskID, isDone) {
+    const response = await fetch(`${API_URL}/tasks/${taskID}/done`,{
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({is_done: isDone})
+    }); 
+
+    if (!response.ok){
+        console.error("Failed to update task status.");
+        return;
+    }
+
+    console.log(isDone ? "Task marked as done" : "Task marked as undone");
+
+    // refresh task list
+    loadTasks();
+}
+
 
 // INITIAL LOAD ---------------------
 loadTasks();
