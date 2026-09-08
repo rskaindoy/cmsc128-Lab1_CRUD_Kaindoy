@@ -42,6 +42,19 @@ app.post("/api/tasks", (req, res) => {
     });
 });
 
+
+// get all active tasks
+app.get("/api/tasks", (req, res) => {
+    const tasks = db.prepare(`
+        SELECT *
+        FROM Task
+        WHERE deleted_at IS NULL
+        ORDER BY due ASC
+    `).all();
+
+    res.json(tasks);
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
