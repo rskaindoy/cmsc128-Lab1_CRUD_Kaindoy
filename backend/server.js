@@ -1,3 +1,5 @@
+// connects database.js to server.js
+
 const express = require("express");
 const cors = require("cors");
 
@@ -21,6 +23,23 @@ app.use(express.json());
 // test route
 app.get("/", (req, res) => {
     res.send("Lista API is running!");
+});
+
+// create a task
+app.post("/api/tasks", (req, res) => {
+    const { title, due, priority, tag } = req.body;
+
+    const statement = db.prepare(`
+        INSERT INTO Task (title, due, priority, tag)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    const result = statement.run(title, due, priority, tag);
+
+    res.json({
+        task_id: result.lastInsertRowid,
+        message: "Task created!"
+    });
 });
 
 app.listen(PORT, () => {
