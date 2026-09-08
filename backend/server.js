@@ -96,6 +96,29 @@ app.delete("/api/tasks/:id", (req, res) => {
     });
 });
 
+// RESTORE DELETED TASK
+app.put("/api/tasks/:id/restore", (req, res) => {
+    const { id } = req.params;
+
+    const statement = db.prepare(`
+        UPDATE Task
+        SET deleted_at = NULL
+        WHERE task_id = ?
+    `);
+
+    const result = statement.run(id);
+
+    if (result.changes === 0) {
+        return res.status(404).json({
+            message: "Task not found"
+        });
+    }
+
+    res.json({
+        message: "Task restored!"
+    });
+});
+
 // CHECK / UNCHECK TASKS
 app.put("/api/tasks/:id/done", (req, res) => {
     const { id } = req.params;
