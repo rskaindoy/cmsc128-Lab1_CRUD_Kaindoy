@@ -25,6 +25,23 @@ app.get("/", (req, res) => {
     res.send("Lista API is running!");
 });
 
+// create a task
+app.post("/api/tasks", (req, res) => {
+    const { title, due, priority, tag } = req.body;
+
+    const statement = db.prepare(`
+        INSERT INTO Task (title, due, priority, tag)
+        VALUES (?, ?, ?, ?)
+    `);
+
+    const result = statement.run(title, due, priority, tag);
+
+    res.json({
+        task_id: result.lastInsertRowid,
+        message: "Task created!"
+    });
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

@@ -14,7 +14,8 @@
     </header>
 
     <main>
-        <section>
+
+        <section id="task-section">
             <h2>LISTA</h2>
 
             <!-- TODO: Add filters/sorting later -->
@@ -25,8 +26,57 @@
 
         </section>
 
-         <!-- TODO: add task form / modal -->
+        <!-- ADD TASK -->
+        <button id="add-task-button">Add Task</button>
         
+        <aside id="add-task-panel">
+            <h2>Add a Task</h2>
+
+            <button id="close-task-panel" type="button">X</button>
+            
+            <form id="task-form">
+                <!-- form fields -->
+                <div>
+                    <label for="title">Task</label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Ano ubrahon mo gha?"
+                        required
+                    >   
+                </div>
+
+                <div>
+                    <label for="due">Due date and time</label>
+                    <input
+                        type="datetime-local"
+                        id="due"
+                        name="due"
+                    >   
+                </div>
+
+                <div>
+                    <label for="prio">Priority</label>
+                    <select id="prio" name="prio">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                    </select> 
+                </div>
+
+                <div>
+                    <label for="tag">Category</label>
+                    <select id="tag" name="tag">
+                        <option value="School">School</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Others">Others</option>
+                    </select> 
+                </div>
+
+                <button type="submit">Add Task</button>
+            </form>
+        </aside>
     </main>
 
     <script src="app.js"></script>
