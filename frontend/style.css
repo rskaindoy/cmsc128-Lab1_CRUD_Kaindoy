@@ -12,7 +12,7 @@ body {
 /* header */
 
 header {
-    padding: 1rem;
+    padding: 16px;
 }
 
 /* main content */
@@ -20,15 +20,33 @@ header {
 main {
     max-width: 1000px;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 16px;
 }
 
 /* task list */
 
-#task-list {
+#task-list, #task-form {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 16px;
+}
+
+/* add task panel */
+
+#add-task-panel {
+    display: none;
+}
+
+
+#task-form div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+input, select, button {
+    padding: 8px;
+    font: inherit;
 }
 
 /* TODO: style task cards */
