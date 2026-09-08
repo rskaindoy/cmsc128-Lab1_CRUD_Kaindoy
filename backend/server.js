@@ -12,20 +12,12 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-// TODO: Add API routes here
-/** Example:
- * GET      /api/tasks
- * POST     /api/tasks
- * PUT      /api/tasks/:id
- * DELETE   /api/tasks/:id
- */
-
 // test route
 app.get("/", (req, res) => {
     res.send("Lista API is running!");
 });
 
-// create a task
+// CREATE TASK
 app.post("/api/tasks", (req, res) => {
     const { title, due, priority, tag } = req.body;
 
@@ -43,7 +35,7 @@ app.post("/api/tasks", (req, res) => {
 });
 
 
-// get all active tasks
+// READ TASKS
 app.get("/api/tasks", (req, res) => {
     const tasks = db.prepare(`
         SELECT *
@@ -56,7 +48,7 @@ app.get("/api/tasks", (req, res) => {
 });
 
 
-// update a certain task
+// UPDATE TASK
 app.put("/api/tasks/:id", (req, res) => {
     const { id } = req.params;
     const { title, due, priority, tag } = req.body;
@@ -77,6 +69,30 @@ app.put("/api/tasks/:id", (req, res) => {
 
     res.json({
         message: "Task updated!"
+    });
+});
+
+// DELETE TASK
+app.delete("/api/tasks/:id", (req, res) => {
+    const { id } = req.params;
+
+    const statement = db.prepare(`
+        UPDATE Task
+        SET deleted_at = CURRENT_TIMESTAMP
+        WHERE task_id = ?
+        AND deleted_at is NULL
+    `);
+
+    const result = statement.run(id);
+
+    if (result.changes === 0) {
+        return res.status(404).json({
+            message: "Task not found"
+        });
+    }
+
+    res.json({
+        message: "Task deleted!"
     });
 });
 

@@ -102,7 +102,7 @@ async function loadTasks() {
     renderTasks(tasks);
 }
 
-// display tasks
+// DISPLAY TASKS ---------------------
 function renderTasks(tasks) {
     taskList.innerHTML = "";
 
@@ -123,6 +123,7 @@ function renderTasks(tasks) {
             <p>Category: ${task.tag || "None"}</p>
 
             <button class="edit-task-button" data-id="${task.task_id}">Edit</button>
+            <button class="delete-task-button" data-id="${task.task_id}">Delete</button>
         `;
 
         taskList.appendChild(taskCard);
@@ -138,8 +139,20 @@ function renderTasks(tasks) {
             openEditTaskPanel(taskID, tasks);
         });
     });
+
+    // add event listener to 'DELETE' buttons
+    const deleteButtons = document.querySelectorAll(".delete-task-button");
+
+    deleteButtons.forEach((button) => {
+        button.addEventListener("click", async () => {
+            const taskID = button.dataset.id;
+
+            await deleteTask(taskID);
+        });
+    });
 }
 
+// EDIT TASK ---------------------
 function openEditTaskPanel(taskID, tasks) {
     const task = tasks.find((task) => task.task_id == taskID);
 
@@ -160,13 +173,22 @@ function openEditTaskPanel(taskID, tasks) {
     taskForm.dataset.editingID = taskID;
 }
 
+// DELETE TASK ---------------------
+async function deleteTask(taskID) {
+    const response = await fetch(`${API_URL}/tasks/${taskID}`,{
+        method: "DELETE"
+    }); 
+
+    if (!response.ok){
+        console.error("Failed to delete task.");
+        return;
+    }
+
+    console.log("Task deleted");
+
+    // refresh task list
+    loadTasks();
+}
+
 // INITIAL LOAD ---------------------
 loadTasks();
-
-// TODO: create func to edit a task
-// async function updateTask(id, task) {}
-
-// TODO: create func to delete a task
-// async function deleteTask(id) {}
-
-// TODO: add event listeners
