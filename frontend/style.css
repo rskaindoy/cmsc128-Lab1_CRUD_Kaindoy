@@ -59,7 +59,7 @@ input, select, button {
     margin-top: 0;
 }
 
-.edit-task-button {
+.edit-task-button, .delete-task-button {
     padding: 8px 12px;
     margin-top: 8px;
     cursor: pointer;
