@@ -1,0 +1,42 @@
+/* general */
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* header */
+
+header {
+    padding: 1rem;
+}
+
+/* main content */
+
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* task list */
+
+#task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* TODO: style task cards */
+
+/* TODO: add priority styles */
+
+/* TODO: add completed-task styles */
+
+/* TODO: add empty-state styles */
+
+/* TODO: add responsive/mobile styles */
