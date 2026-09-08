@@ -2,6 +2,7 @@ const Database = require("better-sqlite3");
 
 const db = new Database("lista.db");
 
+// enable foreign key constraints
 db.pragma("foreign_keys = ON");
 
 db.exec(`
