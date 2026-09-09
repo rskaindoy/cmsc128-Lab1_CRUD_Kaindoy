@@ -25,6 +25,11 @@ let currentStatus = "all";
 let currentCategory = "all";
 let currentPriority = "all";
 
+// for sorting
+const sortSelect = document.getElementById("sort-select");
+let currentSort = "created_at";
+
+
 // MANIPULATE TASK PANEL ---------------------
 
 // open the add-task panel
@@ -114,8 +119,9 @@ async function loadTasks() {
 
     const tasks = await response.json()
     const filteredTasks = filterTasks(tasks);
+    const sortedTasks = sortTasks(filteredTasks);
 
-    renderTasks(filteredTasks);
+    renderTasks(sortedTasks);
 }
 
 // FILTER TASKS TO RENDER
@@ -185,6 +191,45 @@ priorityTabs.forEach((button) => {
 
         loadTasks();
     });
+});
+
+// SORTING TASKS
+function sortTasks(tasks){
+    return [...tasks].sort((a, b) => {
+        if (currentSort === "created_at"){
+            return new Date(a.created_at) - new Date(b.created_at);
+        }
+
+        // makes sure tasks with no due date go to the bottom
+        if (currentSort === "due"){
+            if (!a.due && !b.due) return 0;
+            if (!a.due) return 1;
+            if (!b.due) return -1;
+
+            return new Date(a.due) - new Date(b.due);
+        }
+
+        if (currentSort === "priority"){
+            const order = {
+                High: 1,
+                Medium: 2,
+                Low: 3
+            };
+
+            return order[a.priority] - order[b.priority];
+        }
+
+        if (currentSort === "tag"){
+            return a.tag.localeCompare(b.tag);
+        }
+
+        return 0;
+    })
+}
+
+sortSelect.addEventListener("change", () => {
+    currentSort = sortSelect.value;
+    loadTasks();
 });
 
 // DISPLAY TASKS ---------------------

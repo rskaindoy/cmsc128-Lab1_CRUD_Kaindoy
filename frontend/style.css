@@ -114,6 +114,23 @@ input, select, button {
     font-weight: bold;
 }
 
+/* style sorting options */
+
+#task-sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+#sort-select {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background-color: white;
+    font: inherit;
+    cursor: pointer;
+}
+
 /* TODO: add priority styles */
 
 /* TODO: add completed-task styles */
