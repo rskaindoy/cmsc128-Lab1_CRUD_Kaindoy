@@ -18,7 +18,6 @@
         <section id="task-section">
             <h2>LISTA</h2>
 
-            <!-- TODO: Add sorting later -->
             <!-- FILTERS -->
             <div id="task-filters">
 
@@ -44,6 +43,17 @@
                     <button class="priority-tab" data-priority="Medium">Medium</button>
                     <button class="priority-tab" data-priority="High">High</button>
                 </div>
+            </div>
+
+            <!-- SORTING -->
+            <div id="task-sort">
+                <label for="sort-select">Sort By:</label>
+                <select id="sort-select">
+                    <option value="created_at">Date Added</option>
+                    <option value="due">Due Date</option>
+                    <option value="priority">Priority</option>
+                    <option value="tag">Tag</option>
+                </select>
             </div>
 
 
