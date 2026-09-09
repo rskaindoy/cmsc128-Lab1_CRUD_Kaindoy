@@ -247,17 +247,21 @@ function renderTasks(tasks) {
         taskCard.classList.add("task-card");
 
         taskCard.innerHTML = `
-            <label>
+            <div class="task-main">
                 <input type="checkbox" class="done-task-checkbox" data-id="${task.task_id}" ${task.is_done ? "checked" : ""}>
-                ${task.title}
-            </label>
+                <h3>${task.title}</h3>
+            </div>
 
-            <p>Due: ${task.due || "No due date"}</p>
-            <p>Priority: ${task.priority || "None"}</p>
-            <p>Category: ${task.tag || "None"}</p>
+            <div class="task-details">
+                <p>Due: ${task.due || "No due date"}</p>
+                <p>Priority: ${task.priority || "None"}</p>
+                <p>Category: ${task.tag || "None"}</p>
+            </div>
 
-            <button class="edit-task-button" data-id="${task.task_id}">Edit</button>
-            <button class="delete-task-button" data-id="${task.task_id}">Delete</button>
+            <div class="task-actions">
+                <button class="edit-task-button" data-id="${task.task_id}">Edit</button>
+                <button class="delete-task-button" data-id="${task.task_id}">Delete</button>
+            </div>
         `;
 
         taskList.appendChild(taskCard);

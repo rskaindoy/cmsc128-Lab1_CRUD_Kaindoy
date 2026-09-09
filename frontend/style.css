@@ -110,6 +110,33 @@ input, select, button {
 
 .task-card h3 {
     margin-top: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.task-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.task-main h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.task-details {
+    margin-top: 12px;
+}
+
+.task-details p {
+    margin: 4px 0;
+}
+
+.task-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
 }
 
 .edit-task-button, .delete-task-button {
