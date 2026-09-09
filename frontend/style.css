@@ -4,26 +4,56 @@
     box-sizing: border-box;
 }
 
+:root {
+    --cream: #F7F1E7;
+    --green: #176B57;
+    --terracotta: #D8795B;
+    --yellow: #E9B949;
+    --charcoal: #292824;
+    --blue: #AFC4D8;
+}
+
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: "Nunito Sans", sans-serif;
+    background-color: var(--cream);
+    color: var(--charcoal);
 }
 
 /* header */
 
-header {
-    padding: 16px;
-}
-
-/* main content */
-
-main {
+header, main {
     max-width: 1000px;
     margin: 0 auto;
-    padding: 16px;
+    padding: 24px;
 }
 
-/* task list */
+header {
+    padding-top: 40px;
+    padding-bottom: 16px;
+}
+
+header h1 {
+    margin: 0;
+    color: var(--green);
+    font-size: 40px;
+}
+
+header p {
+    margin-top: 8px;
+    color: #666;
+}
+
+
+/* task section */
+#task-section {
+    margin-top: 24px;
+}
+
+#task-section h2 {
+    margin-bottom: 16px;
+    font-size: 24px;
+}
 
 #task-list, #task-form {
     display: flex;
@@ -35,6 +65,26 @@ main {
 
 #add-task-panel {
     display: none;
+}
+
+#add-task-button {
+    margin-top: 24px;
+    padding: 12px 20px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: var(--green);
+    color: white;
+
+    font-size: 16px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+#add-task-button:hover {
+    background-color: #125846;
 }
 
 
@@ -51,8 +101,11 @@ input, select, button {
 
 /* style task cards */
 .task-card {
-    padding: 16px;
-    border: 1px solid #ccc;
+    padding: 20px;
+    border: 1px solid #e5ded2;
+    border-radius: 12px;
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(41, 40, 36, 0.05);
 }
 
 .task-card h3 {
