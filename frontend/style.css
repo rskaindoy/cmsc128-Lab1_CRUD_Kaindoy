@@ -146,8 +146,62 @@ input, select, button {
 }
 
 .done-task-checkbox {
-    margin-right: 8px;
+    width: 18px;
+    height: 18px;
     cursor: pointer;
+}
+
+.task-card.done {
+    opacity: 0.7;
+}
+
+.task-card.done h3 {
+    text-decoration: line-through;
+}
+
+.task-badges {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.overdue-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background-color: var(--terracotta);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.category-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background-color: var(--cream);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.priority-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.priority-badge.high {
+    background-color: var(--yellow);
+}
+
+.priority-badge.medium {
+    background-color: var(--blue);
+}
+
+.priority-badge.low {
+    background-color: #e5ded2;
 }
 
 #undo-notif {

@@ -246,6 +246,11 @@ function renderTasks(tasks) {
         
         taskCard.classList.add("task-card");
 
+        // checks if done
+        if (task.is_done) {
+            taskCard.classList.add("done");
+        }
+
         taskCard.innerHTML = `
             <div class="task-main">
                 <input type="checkbox" class="done-task-checkbox" data-id="${task.task_id}" ${task.is_done ? "checked" : ""}>
@@ -254,8 +259,21 @@ function renderTasks(tasks) {
 
             <div class="task-details">
                 <p>Due: ${task.due || "No due date"}</p>
-                <p>Priority: ${task.priority || "None"}</p>
-                <p>Category: ${task.tag || "None"}</p>
+                
+                ${ task.due && new Date(task.due) < new Date() && !task.is_done
+                    ? `<span class="overdue-badge">Overdue</span>`
+                    : ""
+                }
+
+                ${ task.priority
+                    ? `<span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>`
+                    : ""
+                }
+
+                ${ task.tag
+                    ? `<span class="category-badge">${task.tag}</span>`
+                    : ""
+                }
             </div>
 
             <div class="task-actions">
