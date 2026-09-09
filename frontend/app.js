@@ -19,9 +19,11 @@ undoNotif.style.display = "none";
 // for filters
 const statusTabs = document.querySelectorAll(".filter-tab");
 const categoryTabs = document.querySelectorAll(".category-tab");
+const priorityTabs = document.querySelectorAll(".priority-tab");
 
 let currentStatus = "all";
 let currentCategory = "all";
+let currentPriority = "all";
 
 // MANIPULATE TASK PANEL ---------------------
 
@@ -133,6 +135,11 @@ function filterTasks(tasks){
             return false;
         }
 
+        // check priority
+        if (currentPriority !== "all" && task.priority !== currentPriority){
+            return false;
+        }
+
         return true;
     });
 }
@@ -156,6 +163,21 @@ categoryTabs.forEach((button) => {
         currentCategory = button.dataset.category;
 
         categoryTabs.forEach((tab) => {
+            tab.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        loadTasks();
+    });
+});
+
+
+priorityTabs.forEach((button) => {
+    button.addEventListener("click", () => {
+        currentPriority = button.dataset.priority;
+
+        priorityTabs.forEach((tab) => {
             tab.classList.remove("active");
         });
 
