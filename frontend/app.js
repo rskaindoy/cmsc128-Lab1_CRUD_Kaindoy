@@ -10,10 +10,20 @@ const addTaskPanel = document.getElementById("add-task-panel");
 const taskForm = document.getElementById("task-form");
 const taskList = document.getElementById("task-list");
 
+// for undo
 const undoNotif = document.getElementById("undo-notif");
 const undoButton = document.getElementById("undo-button");
 
 undoNotif.style.display = "none";
+
+// for filters
+const statusTabs = document.querySelectorAll(".filter-tab");
+const categoryTabs = document.querySelectorAll(".category-tab");
+const priorityTabs = document.querySelectorAll(".priority-tab");
+
+let currentStatus = "all";
+let currentCategory = "all";
+let currentPriority = "all";
 
 // MANIPULATE TASK PANEL ---------------------
 
@@ -103,9 +113,79 @@ async function loadTasks() {
     }
 
     const tasks = await response.json()
+    const filteredTasks = filterTasks(tasks);
 
-    renderTasks(tasks);
+    renderTasks(filteredTasks);
 }
+
+// FILTER TASKS TO RENDER
+function filterTasks(tasks){
+    return tasks.filter((task) => {
+        // check status
+        if (currentStatus === "active" && task.is_done) {
+            return false;
+        }
+
+        if (currentStatus === "done" && !task.is_done) {
+            return false;
+        }
+
+        // check category
+        if (currentCategory !== "all" && task.tag !== currentCategory){
+            return false;
+        }
+
+        // check priority
+        if (currentPriority !== "all" && task.priority !== currentPriority){
+            return false;
+        }
+
+        return true;
+    });
+}
+
+statusTabs.forEach((button) => {
+    button.addEventListener("click", () => {
+        currentStatus = button.dataset.status;
+
+        statusTabs.forEach((tab) => {
+            tab.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        loadTasks();
+    });
+});
+
+categoryTabs.forEach((button) => {
+    button.addEventListener("click", () => {
+        currentCategory = button.dataset.category;
+
+        categoryTabs.forEach((tab) => {
+            tab.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        loadTasks();
+    });
+});
+
+
+priorityTabs.forEach((button) => {
+    button.addEventListener("click", () => {
+        currentPriority = button.dataset.priority;
+
+        priorityTabs.forEach((tab) => {
+            tab.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        loadTasks();
+    });
+});
 
 // DISPLAY TASKS ---------------------
 function renderTasks(tasks) {

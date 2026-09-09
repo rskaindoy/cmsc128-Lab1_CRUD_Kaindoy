@@ -18,7 +18,34 @@
         <section id="task-section">
             <h2>LISTA</h2>
 
-            <!-- TODO: Add filters/sorting later -->
+            <!-- TODO: Add sorting later -->
+            <!-- FILTERS -->
+            <div id="task-filters">
+
+                <!-- status -->
+                <div id="status-tabs">
+                    <button class="filter-tab active" data-status="all">ALL</button>
+                    <button class="filter-tab" data-status="active">Active</button>
+                    <button class="filter-tab" data-status="done">Done</button>
+                </div>
+
+                <!-- category / tabs -->
+                <div id="category-tabs">
+                    <button class="category-tab active" data-category="all">ALL</button>
+                    <button class="category-tab" data-category="School">School</button>
+                    <button class="category-tab" data-category="Personal">Personal</button>
+                    <button class="category-tab" data-category="Others">Others</button>
+                </div>
+
+                <!-- priority -->
+                <div id="priority-tabs">
+                    <button class="priority-tab active" data-priority="all">ALL</button>
+                    <button class="priority-tab" data-priority="Low">Low</button>
+                    <button class="priority-tab" data-priority="Medium">Medium</button>
+                    <button class="priority-tab" data-priority="High">High</button>
+                </div>
+            </div>
+
 
             <div id="task-list">
                 <!-- JS will generate the tasks here -->

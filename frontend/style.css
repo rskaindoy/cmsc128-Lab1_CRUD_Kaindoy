@@ -91,6 +91,29 @@ input, select, button {
 #undo-notif button {
     cursor: pointer;
 }
+
+/* style filters */
+#task-filters {
+    margin-bottom: 16px;
+}
+
+#status-tabs, #category-tabs, #priority-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.filter-tab, .category-tab, .priority-tab {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background-color: white;
+    cursor: pointer;
+}
+
+.filter-tab.active, .category-tab.active, .priority-tab.active {
+    font-weight: bold;
+}
+
 /* TODO: add priority styles */
 
 /* TODO: add completed-task styles */
