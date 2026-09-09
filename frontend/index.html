@@ -18,33 +18,51 @@
     <main>
 
         <section id="task-section">
-            <h2>LISTA</h2>
+            
+            <div id="task-header">
+                <h2>My Tasks</h2>
+                <button id="add-task-button" type="button">+ Add Task</button>
+            </div>
 
             <!-- FILTERS -->
             <div id="task-filters">
+                <p>Filter by:</p>
 
-                <!-- status -->
-                <div id="status-tabs">
-                    <button class="filter-tab active" data-status="all">ALL</button>
-                    <button class="filter-tab" data-status="active">Active</button>
-                    <button class="filter-tab" data-status="done">Done</button>
-                </div>
+                <div class="filter-group">
+                    <!-- status -->
+                    <span class="filter-label">Status</span>
 
-                <!-- category / tabs -->
-                <div id="category-tabs">
-                    <button class="category-tab active" data-category="all">ALL</button>
-                    <button class="category-tab" data-category="School">School</button>
-                    <button class="category-tab" data-category="Personal">Personal</button>
-                    <button class="category-tab" data-category="Others">Others</button>
+                    <div id="status-tabs">
+                        <button class="filter-tab active" data-status="all">ALL</button>
+                        <button class="filter-tab" data-status="active">Active</button>
+                        <button class="filter-tab" data-status="done">Completed</button>
+                    </div>
                 </div>
+                
+                <div class="filter-group">
+                    <!-- category / tabs -->
+                    <span class="filter-label">Category</span>
 
-                <!-- priority -->
-                <div id="priority-tabs">
-                    <button class="priority-tab active" data-priority="all">ALL</button>
-                    <button class="priority-tab" data-priority="Low">Low</button>
-                    <button class="priority-tab" data-priority="Medium">Medium</button>
-                    <button class="priority-tab" data-priority="High">High</button>
+                    <div id="category-tabs">
+                        <button class="category-tab active" data-category="all">ALL</button>
+                        <button class="category-tab" data-category="School">School</button>
+                        <button class="category-tab" data-category="Personal">Personal</button>
+                        <button class="category-tab" data-category="Others">Others</button>
+                    </div>
                 </div>
+               
+                <div class="filter-group">
+                    <!-- priority -->
+                    <span class="filter-label">Priority</span>
+
+                    <div id="priority-tabs">
+                        <button class="priority-tab active" data-priority="all">ALL</button>
+                        <button class="priority-tab" data-priority="Low">Low</button>
+                        <button class="priority-tab" data-priority="Medium">Medium</button>
+                        <button class="priority-tab" data-priority="High">High</button>
+                    </div>
+                </div>
+    
             </div>
 
             <!-- SORTING -->
@@ -64,9 +82,6 @@
             </div>
 
         </section>
-
-        <!-- ADD TASK -->
-        <button id="add-task-button">Add Task</button>
         
         <aside id="add-task-panel">
             <h2 id="task-panel-title">Add a Task</h2>

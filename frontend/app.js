@@ -40,12 +40,12 @@ addTaskButton.addEventListener("click", () => {
     document.getElementById("task-panel-title").textContent = "Add a Task";
     document.getElementById("task-submit-button").textContent = "Add Task";
 
-    addTaskPanel.style.display = "block";
+    addTaskPanel.classList.add("open");
 });
 
 // close the add-task panel
 closeTaskPanel.addEventListener("click", () => {
-    addTaskPanel.style.display = "none";
+    addTaskPanel.classList.remove("open");
 });
 
 
@@ -97,7 +97,7 @@ taskForm.addEventListener("submit", async (event) => {
         taskForm.reset();
         delete taskForm.dataset.editingID;      // makes editingID undefined, which is also default
 
-        addTaskPanel.style.display = "none";
+        addTaskPanel.classList.remove("open");
 
         // refresh task list
         loadTasks();
@@ -232,6 +232,23 @@ sortSelect.addEventListener("change", () => {
     loadTasks();
 });
 
+// FORMAT DATE
+function formatDueDate(due) {
+    if (!due) {
+        return "No due date";
+    }
+
+    const date = new Date(due);
+
+    return date.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+    });
+}
+
 // DISPLAY TASKS ---------------------
 function renderTasks(tasks) {
     taskList.innerHTML = "";
@@ -258,7 +275,7 @@ function renderTasks(tasks) {
             </div>
 
             <div class="task-details">
-                <p>Due: ${task.due || "No due date"}</p>
+                <p>Due: ${formatDueDate(task.due)}</p>
                 
                 ${ task.due && new Date(task.due) < new Date() && !task.is_done
                     ? `<span class="overdue-badge">Overdue</span>`
@@ -336,7 +353,7 @@ function openEditTaskPanel(taskID, tasks) {
     document.getElementById("prio").value = task.priority || "Medium";
     document.getElementById("tag").value = task.tag || "Others";
 
-    addTaskPanel.style.display = "block";
+    addTaskPanel.classList.add("open");
 
     taskForm.dataset.editingID = taskID;
 }
