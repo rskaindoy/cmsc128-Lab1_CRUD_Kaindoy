@@ -3,57 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listahan Mo, Dai!</title>
+    <title>USAD</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link href="style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <header>
-        <h1>Listahan Mo, Dai!</h1>
+        <img src="images/logo.png" alt="USAD logo">
+
+        <p>One step at a time.</p>
+        <p>Matatapos din yan. Uusad ka rin</p>
         <!-- TODO: Add navigation / user info later -->
     </header>
 
     <main>
 
         <section id="task-section">
-            <h2>LISTA</h2>
-
-            <!-- FILTERS -->
-            <div id="task-filters">
-
-                <!-- status -->
-                <div id="status-tabs">
-                    <button class="filter-tab active" data-status="all">ALL</button>
-                    <button class="filter-tab" data-status="active">Active</button>
-                    <button class="filter-tab" data-status="done">Done</button>
-                </div>
-
-                <!-- category / tabs -->
-                <div id="category-tabs">
-                    <button class="category-tab active" data-category="all">ALL</button>
-                    <button class="category-tab" data-category="School">School</button>
-                    <button class="category-tab" data-category="Personal">Personal</button>
-                    <button class="category-tab" data-category="Others">Others</button>
-                </div>
-
-                <!-- priority -->
-                <div id="priority-tabs">
-                    <button class="priority-tab active" data-priority="all">ALL</button>
-                    <button class="priority-tab" data-priority="Low">Low</button>
-                    <button class="priority-tab" data-priority="Medium">Medium</button>
-                    <button class="priority-tab" data-priority="High">High</button>
-                </div>
+            
+            <div id="task-header">
+                <h2>My Tasks</h2>
+                <button id="add-task-button" type="button">+ Add Task</button>
             </div>
 
-            <!-- SORTING -->
-            <div id="task-sort">
-                <label for="sort-select">Sort By:</label>
-                <select id="sort-select">
-                    <option value="created_at">Date Added</option>
-                    <option value="due">Due Date</option>
-                    <option value="priority">Priority</option>
-                    <option value="tag">Tag</option>
-                </select>
+            <div id="task-controls">
+                <!-- FILTERS -->
+                <div id="filter-controls">
+                    <span class="controls-label">Filter by:</span>
+
+                    <label for="status-filter">Status:</label>
+                    <select id="status-filter">
+                        <option value="all">ALL</option>
+                        <option value="active">Active</option>
+                        <option value="done">Completed</option>
+                    </select>
+                    
+                    <label for="category-filter">Category:</label>
+                    <select id="category-filter">
+                        <option value="all">ALL</option>
+                        <option value="School">School</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Others">Others</option>
+                    </select>
+
+                    <label for="priority-filter">Priority:</label>
+                    <select id="priority-filter">
+                        <option value="all">ALL</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>    
+                </div>
+
+                <!-- SORTING -->
+                <div id="sort-control">
+                    <span class="controls-label">Sort by:</span>
+                    <select id="sort-select">
+                        <option value="created_at">Date Added</option>
+                        <option value="due">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="tag">Tag</option>
+                    </select>
+                </div>
             </div>
 
 
@@ -62,9 +73,6 @@
             </div>
 
         </section>
-
-        <!-- ADD TASK -->
-        <button id="add-task-button">Add Task</button>
         
         <aside id="add-task-panel">
             <h2 id="task-panel-title">Add a Task</h2>
@@ -79,7 +87,7 @@
                         type="text"
                         id="title"
                         name="title"
-                        placeholder="Ano ubrahon mo gha?"
+                        placeholder="What do you need to do?"
                         required
                     >   
                 </div>
@@ -115,6 +123,16 @@
             </form>
         </aside>
     </main>
+
+    <!-- delete confirmation notif -->
+    <div id="delete-confirmation" class="notification">
+        <p id="delete-message"></p>
+
+        <div class="confirmation-actions">
+            <button id="cancel-delete-button" type="button">Cancel</button>
+            <button id="confirm-delete-button" type="button">Delete</button>
+        </div>
+    </div>
 
     <!-- undo notif -->
     <div id="undo-notif">
