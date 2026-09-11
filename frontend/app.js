@@ -10,16 +10,26 @@ const addTaskPanel = document.getElementById("add-task-panel");
 const taskForm = document.getElementById("task-form");
 const taskList = document.getElementById("task-list");
 
-// for undo
+// for delete confirmation notif
+const deleteConfirmation = document.getElementById("delete-confirmation");
+const deleteMsg = document.getElementById("delete-message");
+const cancelDeleteButton = document.getElementById("cancel-delete-button");
+const confirmDeleteButton = document.getElementById("confirm-delete-button");
+
+deleteConfirmation.style.display = "none";
+
+let taskToDelete = null;
+
+// for undo notif
 const undoNotif = document.getElementById("undo-notif");
 const undoButton = document.getElementById("undo-button");
 
 undoNotif.style.display = "none";
 
 // for filters
-const statusTabs = document.querySelectorAll(".filter-tab");
-const categoryTabs = document.querySelectorAll(".category-tab");
-const priorityTabs = document.querySelectorAll(".priority-tab");
+const statusFilter = document.getElementById("status-filter");
+const categoryFilter = document.getElementById("category-filter");
+const priorityFilter = document.getElementById("priority-filter");
 
 let currentStatus = "all";
 let currentCategory = "all";
@@ -150,47 +160,19 @@ function filterTasks(tasks){
     });
 }
 
-statusTabs.forEach((button) => {
-    button.addEventListener("click", () => {
-        currentStatus = button.dataset.status;
-
-        statusTabs.forEach((tab) => {
-            tab.classList.remove("active");
-        });
-
-        button.classList.add("active");
-
-        loadTasks();
-    });
+statusFilter.addEventListener("change", () => {
+    currentStatus = statusFilter.value;
+    loadTasks();
 });
 
-categoryTabs.forEach((button) => {
-    button.addEventListener("click", () => {
-        currentCategory = button.dataset.category;
-
-        categoryTabs.forEach((tab) => {
-            tab.classList.remove("active");
-        });
-
-        button.classList.add("active");
-
-        loadTasks();
-    });
+categoryFilter.addEventListener("change", () => {
+    currentCategory = categoryFilter.value;
+    loadTasks();
 });
 
-
-priorityTabs.forEach((button) => {
-    button.addEventListener("click", () => {
-        currentPriority = button.dataset.priority;
-
-        priorityTabs.forEach((tab) => {
-            tab.classList.remove("active");
-        });
-
-        button.classList.add("active");
-
-        loadTasks();
-    });
+priorityFilter.addEventListener("change", () => {
+    currentPriority = priorityFilter.value;
+    loadTasks();
 });
 
 // SORTING TASKS
@@ -294,8 +276,8 @@ function renderTasks(tasks) {
             </div>
 
             <div class="task-actions">
-                <button class="edit-task-button" data-id="${task.task_id}">Edit</button>
-                <button class="delete-task-button" data-id="${task.task_id}">Delete</button>
+                <button class="edit-task-button" data-id="${task.task_id}">✎ Edit</button>
+                <button class="delete-task-button" data-id="${task.task_id}">🗑 Delete</button>
             </div>
         `;
 
@@ -320,7 +302,16 @@ function renderTasks(tasks) {
         button.addEventListener("click", async () => {
             const taskID = button.dataset.id;
 
-            await deleteTask(taskID);
+            const task = tasks.find((task) => task.task_id == taskID);
+
+            if (!task) {
+                return;
+            }
+
+            // won't delete yet, will only show the confirmation
+            taskToDelete = taskID;
+            deleteMsg.textContent =`Are you sure you want to delete "${task.title}"?`;
+            deleteConfirmation.style.display = "block";
         });
     });
 
@@ -336,6 +327,25 @@ function renderTasks(tasks) {
         });
     });
 }
+
+// DELETE CONFIRMATION ACTIONS ---------------------
+cancelDeleteButton.addEventListener("click", () => {
+    taskToDelete = null;
+    deleteConfirmation.style.display = "none";
+});
+
+confirmDeleteButton.addEventListener("click", async () => {
+    if (!taskToDelete) {
+        return;
+    }
+
+    const taskID = taskToDelete;
+
+    taskToDelete = null;
+    deleteConfirmation.style.display = "none";
+
+    await deleteTask(taskID);
+});
 
 // EDIT TASK ---------------------
 function openEditTaskPanel(taskID, tasks) {
