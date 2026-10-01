@@ -4,7 +4,9 @@ const express = require("express");
 const cors = require("cors");
 
 const db = require("./database");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const session = require("express-session");
+const SQLiteStore = require("connect-sqlite3")(session);
 
 // app setup
 const app = express();
@@ -13,6 +15,20 @@ const PORT = 3000;
 // middleware
 app.use(cors());
 app.use(express.json());
+
+// makes the session last 24 hours
+app.use(session({
+    store: new SQLiteStore({
+        db: "sessions.db",
+        dir: "./"
+    }),
+    secret: "usad-session-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24
+    }
+}));
 
 // test route
 app.get("/", (req, res) => {
@@ -73,7 +89,7 @@ app.post("/api/auth/login", async (req, res) => {
             WHERE username = ?
         `).get(username);
 
-    // check if useßr exists
+    // check if user exists
     if (!user) {
         return res.status(401).json({error: "Invalid username or password."});
     }
@@ -86,6 +102,9 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     // login successful !
+
+    req.session.userId = user.user_id;      // session is for this user;  
+
     res.json({
         message: "Login successful.",
         user: {
@@ -95,6 +114,26 @@ app.post("/api/auth/login", async (req, res) => {
         }
     });
 
+})
+
+app.get("/api/auth/me", (req, res) => {
+    if (!req.session.userId) {
+        return res.status(401).json({error: "Not authenticated"});
+    }
+
+    const user = db.prepare(`
+        SELECT user_id, username, display_name
+        FROM User
+        WHERE user_id = ?
+    `).get(req.session.userId);
+
+    if (!user) {
+        return res.status(401).json({error: "User not found"});
+    }
+
+    res.json({
+        user: user
+    })
 })
 
 app.post("/api/auth/logout", async (req, res) => {
