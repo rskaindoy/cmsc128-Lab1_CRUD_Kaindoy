@@ -1,2 +1,3 @@
 node_modules/
-lista.db
+backend/lista.db
+backend/sessions.db
