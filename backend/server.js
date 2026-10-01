@@ -58,7 +58,43 @@ app.post("/api/auth/register", async (req, res) => {
 })
 
 app.post("/api/auth/login", async (req, res) => {
-    // TODO: later
+    // get un and pw
+    const { username, pw } = req.body;
+
+    // validate required fields
+    if (!username || !pw) {
+        return res.status(400).json({error: "All fields are required."});
+    }
+
+    // find user
+    const user = db.prepare(`
+            SELECT user_id, username, display_name, pw_hash
+            FROM User
+            WHERE username = ?
+        `).get(username);
+
+    // check if useßr exists
+    if (!user) {
+        return res.status(401).json({error: "Invalid username or password."});
+    }
+
+    // check pw
+    const pw_match = await bcrypt.compare(pw, user.pw_hash);
+
+    if (!pw_match) {
+        return res.status(401).json({error: "Invalid username or password."});
+    }
+
+    // login successful !
+    res.json({
+        message: "Login successful.",
+        user: {
+            user_id: user.user_id,
+            username: user.username,
+            display_name: user.display_name
+        }
+    });
+
 })
 
 app.post("/api/auth/logout", async (req, res) => {
