@@ -8,7 +8,10 @@ db.pragma("foreign_keys = ON");
 db.exec(`
     CREATE TABLE IF NOT EXISTS User (
         user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL
+        username TEXT NOT NULL UNIQUE,
+        display_name TEXT NOT NULL,
+        pw_hash TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
     CREATE TABLE IF NOT EXISTS Task (
