@@ -137,7 +137,17 @@ app.get("/api/auth/me", (req, res) => {
 })
 
 app.post("/api/auth/logout", async (req, res) => {
-    // TODO: later
+    req.session.destroy((err) => {
+        if (err) {
+            return res.status(500).json({error: "Could not log out"});
+        }
+    
+        res.clearCookie("connect.sid");
+
+        res.json({
+            message: "Logout successful."
+        });
+   })
 })
 
 
