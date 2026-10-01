@@ -4,7 +4,9 @@ const express = require("express");
 const cors = require("cors");
 
 const db = require("./database");
+const bcrypt = require("bcrypt")
 
+// app setup
 const app = express();
 const PORT = 3000;
 
@@ -17,6 +19,54 @@ app.get("/", (req, res) => {
     res.send("Lista API is running!");
 });
 
+
+// AUTHENTICATION ROUTES
+app.post("/api/auth/register", async (req, res) => {
+    // get un, display name, pw
+    const { username, display_name, pw } = req.body;
+    
+    // validate required fields
+    if (!username || !display_name || !pw) {
+        return res.status(400).json({error: "All fields are required."});
+    }
+
+    // check duplicate un (if un alr exists)
+    const existingUser = db.prepare(`
+            SELECT user_id
+            FROM User
+            WHERE username = ?
+        `).get(username);
+    
+    if (existingUser) {
+        return res.status(409).json({error: "Username is already taken."});
+    }
+
+    // hash pw
+    const pw_hash = await bcrypt.hash(pw, 10);
+    
+    // save user
+    const result = db.prepare(`
+        INSERT INTO User (username, display_name, pw_hash)
+        VALUES (?, ?, ?)
+    `).run(username, display_name, pw_hash);
+
+    // acc created !
+    res.status(201).json({
+        message: "Account created successfully.",
+        user_id: result.lastInsertRowid
+    });
+})
+
+app.post("/api/auth/login", async (req, res) => {
+    // TODO: later
+})
+
+app.post("/api/auth/logout", async (req, res) => {
+    // TODO: later
+})
+
+
+// CRUD ROUTES
 // CREATE TASK
 app.post("/api/tasks", (req, res) => {
     const { title, due, priority, tag } = req.body;
@@ -28,9 +78,9 @@ app.post("/api/tasks", (req, res) => {
 
     const result = statement.run(title, due, priority, tag);
 
-    res.json({
-        task_id: result.lastInsertRowid,
-        message: "Task created!"
+    res.status(201).json({
+        message: "Task created!",
+        task_id: result.lastInsertRowid
     });
 });
 
@@ -144,6 +194,8 @@ app.put("/api/tasks/:id/done", (req, res) => {
     });
 });
 
+
+// start server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
