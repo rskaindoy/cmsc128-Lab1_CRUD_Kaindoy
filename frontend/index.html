@@ -17,6 +17,59 @@
         <!-- TODO: Add navigation / user info later -->
     </header>
 
+    <section id="auth-section">
+        
+        <!-- LOGIN -->
+        <div id="login-form-container">
+            <h2>Welcome back!</h2>
+
+            <form id="login-form">
+                <div>
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" required>
+                </div>
+
+                <div>
+                    <label for="login-pw">Password</label>
+                    <input type="password" id="login-pw" required>
+                </div>
+
+                <button type="submit">Log In</button>
+            </form>
+
+            <p id="login-message"></p>
+
+            <button id="show-reg-button" type="button">Create an account</button>
+        </div>
+        <!-- REGISTER -->
+        <div id="reg-form-container" hidden>
+            <h2>Create your account</h2>
+
+            <form id="reg-form">
+                <div>
+                    <label for="reg-username">Username</label>
+                    <input type="text" id="reg-username" required>
+                </div>
+
+                <div>
+                    <label for="reg-display-name">Display Name</label>
+                    <input type="text" id="reg-display-name" required>
+                </div>
+
+                <div>
+                    <label for="reg-pw">Password</label>
+                    <input type="password" id="reg-pw" required>
+                </div>
+
+                <button type="submit">Create Account</button>
+            </form>
+
+            <p id="reg-message"></p>
+            
+            <button id="show-login-button" type="button">Back to login</button>
+        </div>
+    </section>
+
     <main>
 
         <section id="task-section">
@@ -140,6 +193,7 @@
         <button id="undo-button" type="button">Undo</button>
     </div>
 
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

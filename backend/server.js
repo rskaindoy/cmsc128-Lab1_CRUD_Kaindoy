@@ -13,7 +13,10 @@ const app = express();
 const PORT = 3000;
 
 // middleware
-app.use(cors());
+app.use(cors({
+    origin: "http://127.0.0.1:5500",
+    credentials: true
+}));
 app.use(express.json());
 
 // makes the session last 24 hours
@@ -64,9 +67,11 @@ app.post("/api/auth/register", async (req, res) => {
     const result = db.prepare(`
         INSERT INTO User (username, display_name, pw_hash)
         VALUES (?, ?, ?)
-    `).run(username, display_name, pw_hash);
+    `).run(username, display_name, pw_hash); 
 
     // acc created !
+    req.session.userId = result.lastInsertRowid;      // session is for this user;  
+
     res.status(201).json({
         message: "Account created successfully.",
         user_id: result.lastInsertRowid

@@ -1,8 +1,5 @@
 console.log("Lista app loaded!");
 
-// store API URL
-const API_URL = "http://localhost:3000/api";
-
 // get HTML elements
 const addTaskButton = document.getElementById("add-task-button");
 const closeTaskPanel = document.getElementById("close-task-panel");
