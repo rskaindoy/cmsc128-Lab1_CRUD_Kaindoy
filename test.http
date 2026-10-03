@@ -1,0 +1,34 @@
+POST http://localhost:3000/api/tasks
+Content-Type: application/json
+
+{
+    "title": "Study CMSC 131",
+    "due": "2026-09-10 10:00",
+    "priority": "High",
+    "tag": "School"
+}
+
+### Register account
+POST http://localhost:3000/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "display_name": "Test User",
+    "pw": "testpw123"
+}
+
+### Login
+POST http://localhost:3000/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "pw": "testpw123"
+}
+
+### Check current session
+GET http://localhost:3000/api/auth/me
+
+### Logout
+POST http://localhost:3000/api/auth/logout
