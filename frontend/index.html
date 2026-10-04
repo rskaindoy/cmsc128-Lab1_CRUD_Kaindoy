@@ -20,54 +20,64 @@
     <section id="auth-section">
         
         <!-- LOGIN -->
-        <div id="login-form-container">
+        <div id="login-form-container" class="auth-card">
             <h2>Welcome back!</h2>
+            <p class="auth-sub">Log in to see your tasks.</p>
 
             <form id="login-form">
-                <div>
+                <div class="field">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" required>
+                    <input type="text" id="login-username" autocomplete="username" required>
                 </div>
 
-                <div>
+                <div class="field">
                     <label for="login-pw">Password</label>
-                    <input type="password" id="login-pw" required>
+                    <div class="pw-wrap">
+                        <input type="password" id="login-pw" autocomplete="current-password" required>
+                        <button type="button" class="pw-toggle" data-target="login-pw" aria-label="Show password">Show</button>
+                    </div>
                 </div>
 
-                <button type="submit">Log In</button>
+                <button type="submit" class="auth-submit">Log In</button>
             </form>
 
-            <p id="login-message"></p>
-
-            <button id="show-reg-button" type="button">Create an account</button>
+            <p id="login-message" class="auth-message" role="alert"></p>
+            <p class="auth-switch">New here? <button id="show-reg-button" type="button">Create an account</button></p>
         </div>
 
         <!-- REGISTER -->
-        <div id="reg-form-container" hidden>
-            <h2>Create your account</h2>
+        <div id="reg-form-container" class="auth-card" hidden>
+            <h2>Create your USAD account</h2>
 
             <form id="reg-form">
-                <div>
+                <div class="field">
                     <label for="reg-username">Username</label>
-                    <input type="text" id="reg-username" required>
+                    <input type="text" id="reg-username" autocomplete="username"
+                    minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" title="Letters, numbers, and underscores only." required>
+                    <p class="field-hint">Must be unique, 3-20 characters, and only contains letters, numbers, and/or underscores.</p>
                 </div>
 
-                <div>
+                <div class="field">
                     <label for="reg-display-name">Display Name</label>
-                    <input type="text" id="reg-display-name" required>
+                    <input type="text" id="reg-display-name" autocomplete="nickname" maxlength="50" required>
+                    <p class="field-hint">This is the name we will call you with.</p>
                 </div>
 
-                <div>
+                <div class="field">
                     <label for="reg-pw">Password</label>
-                    <input type="password" id="reg-pw" required>
+                    <div class="pw-wrap">
+                        <input type="password" id="reg-pw" autocomplete="new-password" minlength="8" required>
+                        <button type="button" class="pw-toggle" data-target="reg-pw" aria-label="Show password">Show</button>
+                    </div>
+                    <p class="field-hint">At least 8 characters.</p>
                 </div>
 
-                <button type="submit">Create Account</button>
+                <button type="submit" class="auth-submit">Create Account</button>
             </form>
 
-            <p id="reg-message"></p>
+            <p id="reg-message" class="auth-message" role="alert"></p>
             
-            <button id="show-login-button" type="button">Back to login</button>
+            <p class="auth-switch">Already have an account? <button id="show-login-button" type="button">Log <Ifr></Ifr>n</button></p>
         </div>
     </section>
 

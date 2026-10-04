@@ -42,12 +42,22 @@ app.get("/", (req, res) => {
 // AUTHENTICATION ROUTES
 app.post("/api/auth/register", async (req, res) => {
     // get un, display name, pw
-    const { username, display_name, pw } = req.body;
-    
+    const username = (req.body.username || "").trim();
+    const display_name = (req.body.display_name || "").trim();
+    const pw = req.body.pw || "";
+
     // validate required fields
     if (!username || !display_name || !pw) {
         return res.status(400).json({error: "All fields are required."});
     }
+
+    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
+        return res.status(400).json({error: "Username must be 3-20 characters: a combination of letters, numbers, and underscores only."});
+    } 
+
+    if (pw.length < 8) {
+        return res.status(400).json({error: "Password must be at least 8 characters."});
+    } 
 
     // check duplicate un (if un alr exists)
     const existingUser = db.prepare(`
@@ -96,14 +106,14 @@ app.post("/api/auth/login", async (req, res) => {
 
     // check if user exists
     if (!user) {
-        return res.status(401).json({error: "Invalid username or password."});
+        return res.status(401).json({error: "Invalid username."});
     }
 
     // check pw
     const pw_match = await bcrypt.compare(pw, user.pw_hash);
 
     if (!pw_match) {
-        return res.status(401).json({error: "Invalid username or password."});
+        return res.status(401).json({error: "Invalid password."});
     }
 
     // login successful !

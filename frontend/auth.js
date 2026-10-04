@@ -16,20 +16,75 @@ const regMessage = document.getElementById("reg-message");
 const showRegButton = document.getElementById("show-reg-button");
 const showLoginButton = document.getElementById("show-login-button");
 
-// SWITCH LOGIN / REGISTER
+// HELPERS
 
+function setMessage(element, text, type="error") {
+    element.textContent = text;
+    element.classList.toggle("error", text !== "" && type === "error");
+    element.classList.toggle("success", text !== "" && type === "success");
+}
+
+// disables the submit button while waiting for the server
+function setLoading(form, isLoading, busyText) {
+    const button = form.querySelector('button[type="submit"]');
+
+    if (!button){
+        return;
+    } 
+
+    // remember the original label once, never overwrite it
+    if (!button.dataset.label) {
+        button.dataset.label = button.textContent.trim();
+    }
+
+    button.textContent = isLoading ? busyText : button.dataset.label;
+    button.disabled = isLoading;
+}
+
+function friendlyError(error) {
+    if (error.name === "TimeoutError") {
+        return "The server took too long to respond. Please try again."
+    }
+
+    // fetch() throws a TypeError when the server can't be reached
+    if (error instanceof TypeError) {
+        return "Can't reach the server. Please try again in a moment.";
+    }
+
+    return error.message;
+}
+
+// SHOW / HIDE PW
+document.addEventListener("click", (event) => {
+    const toggle = event.target.closest(".pw-toggle");
+
+    if (!toggle) {
+        return;
+    }
+
+    const input = document.getElementById(toggle.dataset.target);
+    const show = input.type === "password";
+
+    input.type = show ? "text" : "password";
+    toggle.textContent = show ? "Hide" : "Show";
+    toggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
+});
+
+// SWITCH LOGIN / REGISTER
 showRegButton.addEventListener("click", () => {
     loginFormContainer.hidden = true;
     regFormContainer.hidden = false;
 
-    loginMessage.textContent = "";
+    setMessage(loginMessage, "");
+    document.getElementById("reg-username").focus();
 });
 
 showLoginButton.addEventListener("click", () => {
     loginFormContainer.hidden = false;
     regFormContainer.hidden = true;
 
-    regMessage.textContent = "";
+    setMessage(regMessage, "");
+    document.getElementById("login-username").focus();
 });
 
 // LOGIN
@@ -44,6 +99,7 @@ loginForm.addEventListener("submit", async(event) => {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             credentials: "include",
+            signal: AbortSignal.timeout(10000), // give up after 10 seconds
             body: JSON.stringify({ 
                 username, 
                 pw })
@@ -55,11 +111,12 @@ loginForm.addEventListener("submit", async(event) => {
             throw new Error(data.error);
         }
 
-        loginMessage.textContent = "Login successful!";
-
-        checkSession();
+        loginForm.reset();
+        await checkSession();
     } catch (error){
-        loginMessage.textContent = error.message;
+        setMessage(loginMessage, friendlyError(error));
+    } finally {
+        setLoading(loginForm, false);
     }
 });
 
@@ -71,11 +128,15 @@ regForm.addEventListener("submit", async(event) => {
     const display_name = document.getElementById("reg-display-name").value;
     const pw = document.getElementById("reg-pw").value;
 
+    setMessage(regMessage, "");
+    setLoading(regForm, true, "Creating account...");
+
     try {
         const response = await fetch(`${API_URL}/auth/register`, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             credentials: "include",
+            signal: AbortSignal.timeout(10000), // give up after 10 seconds
             body: JSON.stringify({ 
                 username, 
                 display_name,
@@ -89,13 +150,13 @@ regForm.addEventListener("submit", async(event) => {
             throw new Error(data.error);
         }
 
-        regMessage.textContent = "Account created. You can now log in.";
-        
+        // the server alr logged the new user in, so go straight to the app
         regForm.reset();
-
-        checkSession();
+        await checkSession();
     } catch (error){
-        regMessage.textContent = error.message;
+        setMessage(regMessage, friendlyError(error));
+    } finally {
+        setLoading(regForm, false);
     }
 });
 
@@ -122,6 +183,10 @@ async function checkSession() {
 function showLogin() {
     authSection.hidden = false;
     document.querySelector("main").hidden = true;
+
+    // always come back to the login card, not the register one
+    loginFormContainer.hidden = false;
+    regFormContainer.hidden = true;
 }
 
 function showAuthenticated(user) {
