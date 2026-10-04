@@ -284,6 +284,68 @@ app.put("/api/tasks/:id/done", (req, res) => {
     });
 });
 
+// blocks requests from people who aren't logged in
+function requireAuth (req, res, next) {
+    if (!req.session.userId) {
+        return res.status(401).json({error: "Not authenticated"});
+    }
+
+    next();
+}
+
+// TODO: trash routes, delete forever feature
+
+
+// PROFILE ROUTES
+// GET PROFILE
+app.get("/api/profile", requireAuth, (req, res) => {
+    const user = db.prepare(`
+        SELECT user_id, username, display_name, created_at
+        FROM User
+        WHERE user_id = ?
+    `).get(req.session.userId);
+
+    if (!user) {
+        return res.status(404).json({error: "User not found."});
+    }
+
+    res.json({
+        user: user
+    })
+})
+
+// UPDATE PROFILE
+app.put("/api/profile", requireAuth, (req, res) => {
+    const username = (req.body.username || "").trim();
+    const display_name = (req.body.display_name || "").trim();
+
+    if (!username || !display_name) {
+        return res.status(400).json({error: "Username and display name are required."});
+    }
+
+    // username must be unique, ignoring the user's own row
+    const taken = db.prepare(`
+        SELECT user_id
+        FROM User
+        WHERE username = ?
+        AND user_id != ?
+    `).get(username, req.session.userId);
+
+    if (taken) {
+        return res.status(409).json({error: "Username is already taken."});
+    }
+
+    db.prepare(`
+        UPDATE User
+        SET username = ?, display_name = ?
+        WHERE user_id = ?
+    `).run(username, display_name, req.session.userId);
+
+
+    res.json({
+        message: "Profile updated!"
+    });
+});
 
 // start server
 app.listen(PORT, () => {

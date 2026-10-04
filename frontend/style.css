@@ -34,28 +34,12 @@ body {
     background-size: 32px 32px;
 }
 
-/* header */
-
-header, main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px;
-}
-
-main {
-    transition: margin-right 0.25s ease;
-}
-
-body:has(#add-task-panel.open) main {
-    margin-right: 420px;
-}
+/* header (login screen only) */
 
 header {
     max-width: 750px;
     margin: 0 auto;
-
-    padding-top: 32px;
-    padding-bottom: 8px;
+    padding: 32px 24px 8px;
 }
 
 header img {
@@ -85,16 +69,10 @@ header p:last-of-type {
 }
 
 /* task section */
-#task-section {
-    max-width: 700px;
-    margin: 16px auto 0;
-}
-
 #task-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
     margin-bottom: 16px;
 }
 
@@ -103,14 +81,7 @@ header p:last-of-type {
     font-size: 28px;
 }
 
-#task-list, #task-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
 /* add task panel */
-
 #add-task-panel {
     position: fixed;
 
@@ -201,6 +172,11 @@ header p:last-of-type {
     color: var(--charcoal);
 }
 
+#task-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
 
 #task-form div {
     display: flex;
@@ -218,6 +194,51 @@ input, select, button {
     font: inherit;
 }
 
+#task-form input,
+#task-form select {
+    width: 100%;
+
+    padding: 10px 12px;
+
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+
+    background-color: white;
+    color: var(--charcoal);
+
+    font: inherit;
+}
+
+#task-form input:focus,
+#task-form select:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
+}
+
+#task-submit-button {
+    width: 100%;
+
+    margin-top: 8px;
+    padding: 12px 16px;
+
+    border: none;
+    border-radius: 10px;
+
+    background-color: var(--green);
+    color: white;
+
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+#task-submit-button:hover {
+    background-color: #125846;
+}
+
+
 /* style task cards */
 #task-list {
     display: flex;
@@ -229,7 +250,6 @@ input, select, button {
 .task-card {
     width: 100%;
     max-width: 700px;
-    box-sizing: border-box;
 
     padding: 16px 20px;
 
@@ -301,50 +321,6 @@ input, select, button {
     background-color: #f5ddd6;
 }
 
-#task-form input,
-#task-form select {
-    width: 100%;
-
-    padding: 10px 12px;
-
-    border: 1px solid #d8d0c4;
-    border-radius: 8px;
-
-    background-color: white;
-    color: var(--charcoal);
-
-    font: inherit;
-}
-
-#task-form input:focus,
-#task-form select:focus {
-    outline: none;
-    border-color: var(--green);
-    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
-}
-
-#task-submit-button {
-    width: 100%;
-
-    margin-top: 8px;
-    padding: 12px 16px;
-
-    border: none;
-    border-radius: 10px;
-
-    background-color: var(--green);
-    color: white;
-
-    font-size: 16px;
-    font-weight: 700;
-
-    cursor: pointer;
-}
-
-#task-submit-button:hover {
-    background-color: #125846;
-}
-
 /* checkbox */
 .done-task-checkbox {
     appearance: none;
@@ -390,6 +366,7 @@ input, select, button {
     text-decoration: line-through;
 }
 
+/* badges */
 .task-badges {
     display: flex;
     flex-wrap: wrap;
@@ -436,6 +413,7 @@ input, select, button {
     background-color: #e5ded2;
 }
 
+/* delete confirmation */
 #delete-confirmation {
     display: none;
 
@@ -494,6 +472,7 @@ input, select, button {
     background-color: #c7674e;
 }
 
+/* undo notification */
 #undo-notif {
     display: none;
 
@@ -597,13 +576,6 @@ input, select, button {
 }
 
 /* style sorting options */
-#task-sort {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
-}
-
 #sort-select {
     padding: 8px 10px;
 
@@ -621,6 +593,338 @@ input, select, button {
 
 /* TODO: add completed-task styles */
 
-/* TODO: add empty-state styles */
 
-/* TODO: add responsive/mobile styles */
+/* the logo/taglines header is only for the login screen */
+body.logged-in header { 
+    display: none;
+}
+
+main[hidden], .view[hidden] {
+    display: none;
+}
+
+/* sidebar + content layout */
+main {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    min-height: 100vh;
+}
+
+#content {
+    padding: 28px 32px 48px;
+    transition: margin-right 0.25s ease;
+}
+
+/* add task panel pushes only the content, not the sidebar */
+body:has(#add-task-panel.open) #content {
+    margin-right: 420px;
+}
+
+.view {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* sidebar */
+#sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 24px 16px;
+    background-color: white;
+    border-right: 1px solid #e5ded2;
+}
+
+.sidebar-logo {
+    width: 150px;
+    height: auto;
+    margin: 0 8px;
+}
+
+#sidebar-greeting {
+    margin: 4px 8px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+}
+
+#nav-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background-color: transparent;
+    color: var(--charcoal);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background-color: var(--cream);
+}
+
+.nav-item[aria-current="page"] {
+    background-color: var(--green);
+    color: white;
+}
+
+/* .trash-btn:focus-visible, */
+.nav-item:focus-visible,
+.link-button:focus-visible,
+.save-button:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+}
+
+.nav-count {
+    margin-left: auto;
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 11px;
+    background-color: var(--cream);
+    color: var(--charcoal);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.nav-count[hidden] {
+    display: none;
+}
+
+.nav-item[aria-current="page"] .nav-count {
+    background-color: white;
+}
+
+#logout-button {
+    margin-top: auto;
+}
+
+.nav-item.danger {
+    color: #B3401F;
+}
+
+.nav-item.danger:hover {
+    background-color: #f5ddd6;
+}
+
+/* shared view text */
+.view-title {
+    margin: 0;
+    font-size: 28px;
+}
+
+.view-hint {
+    margin: 4px 0 20px;
+    color: #777;
+    font-size: 14px;
+}
+
+.empty-state {
+    padding: 45px 0;
+    text-align: center;
+    color: #777;
+}
+
+/* TODO: trash */
+
+/* profile */
+.profile-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.profile-hero .view-hint {
+    margin-bottom: 0;
+}
+
+.avatar {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--green);
+    color: white;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.group-title {
+    margin: 24px 0 8px 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #777;
+}
+
+.profile-card {
+    background-color: white;
+    border: 1px solid #e5ded2;
+    border-radius: 12px;
+}
+
+.profile-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 56px;
+    padding: 8px 20px;
+    border-top: 1px solid #e5ded2;
+}
+
+.profile-item:first-child {
+    border-top: none;
+}
+
+.profile-label {
+    width: 110px;
+    flex-shrink: 0;
+    color: #777;
+    font-size: 14px;
+}
+
+.profile-value {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-wrap: anywhere;
+}
+
+.profile-value input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+}
+
+.profile-value input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
+}
+
+.link-button {
+    border: none;
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--green);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.link-button:hover {
+    background-color: var(--cream);
+}
+
+.link-button.muted {
+    color: #777;
+}
+
+.link-button:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+    background-color: transparent;
+}
+
+.save-button {
+    border: none;
+    border-radius: 8px;
+    background-color: var(--green);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+
+.profile-message {
+    min-height: 20px;
+    margin: 12px 4px 0;
+    font-size: 14px;
+}
+
+.profile-message.success {
+    color: var(--green);
+}
+
+.profile-message.error {
+    color: #B3401F;
+}
+
+
+/* responsiveness: in mobile, sidebar becomes a bottom bar */
+@media (max-width: 800px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+
+    #sidebar {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: auto;
+        flex-direction: row;
+        gap: 4px;
+        padding: 8px;
+        border-right: none;
+        border-top: 1px solid #e5ded2;
+        z-index: 900;
+    }
+
+    .sidebar-logo, #sidebar-greeting {
+        display: none;
+    }
+
+    #nav-list {
+        flex-direction: row;
+        flex: 1;
+    }
+
+    .nav-item {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2px;
+        padding: 6px 4px;
+        font-size: 12px;
+        text-align: center;
+    }
+
+    #logout-button { 
+        margin-top: 0;
+        width: auto;
+        flex: 0 0 auto;
+    }
+
+    .nav-count {
+        margin-left: 0;
+    }
+
+    #content {
+        padding: 20px 16px 96px;
+    }
+
+    body:has(#add-task-panel.open) #content {
+        margin-right: 0;
+    }
+}

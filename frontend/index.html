@@ -9,12 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- shown on the login/register screen only-->
     <header>
         <img src="images/logo.png" alt="USAD logo">
 
         <p>One step at a time.</p>
-        <p>Matatapos din yan. Uusad ka rin</p>
-        <!-- TODO: Add navigation / user info later -->
+        <p>Matatapos din 'yan.</p>
     </header>
 
     <section id="auth-section">
@@ -41,6 +41,7 @@
 
             <button id="show-reg-button" type="button">Create an account</button>
         </div>
+
         <!-- REGISTER -->
         <div id="reg-form-container" hidden>
             <h2>Create your account</h2>
@@ -70,62 +71,124 @@
         </div>
     </section>
 
-    <main>
+    <main hidden>
+        <!-- SIDEBAR NAV -->
+        <nav id="sidebar" aria-label="Main">
+            <img class="sidebar-logo" src="images/logo.png" alt="USAD">
+            <p id="sidebar-greeting"></p>
 
-        <section id="task-section">
+            <div id="nav-list">
+                <button class="nav-item" type="button" data-view="tasks" aria-current="page">
+                    <span aria-hidden="true">📋</span> Tasks 
+                </button>
+
+                <button class="nav-item" type="button" data-view="profile">
+                    <span aria-hidden="true">👤</span> Profile 
+                </button>
+
+                <!-- TODO: TRASH -->
+            </div>
+
+            <button id="logout-button" class="nav-item danger" type="button">
+                <span aria-hidden="true">👋🏼</span> Log out 
+            </button>
+        </nav>
+
+        <div id="content">
             
-            <div id="task-header">
-                <h2>My Tasks</h2>
-                <button id="add-task-button" type="button">+ Add Task</button>
-            </div>
-
-            <div id="task-controls">
-                <!-- FILTERS -->
-                <div id="filter-controls">
-                    <span class="controls-label">Filter by:</span>
-
-                    <label for="status-filter">Status:</label>
-                    <select id="status-filter">
-                        <option value="all">ALL</option>
-                        <option value="active">Active</option>
-                        <option value="done">Completed</option>
-                    </select>
-                    
-                    <label for="category-filter">Category:</label>
-                    <select id="category-filter">
-                        <option value="all">ALL</option>
-                        <option value="School">School</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Others">Others</option>
-                    </select>
-
-                    <label for="priority-filter">Priority:</label>
-                    <select id="priority-filter">
-                        <option value="all">ALL</option>
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                    </select>    
+            <!-- TASKS-->
+            <section id="task-section" class="view">
+                <div id="task-header">
+                    <h2>My Tasks</h2>
+                    <button id="add-task-button" type="button">+ Add Task</button>
                 </div>
 
-                <!-- SORTING -->
-                <div id="sort-control">
-                    <span class="controls-label">Sort by:</span>
-                    <select id="sort-select">
-                        <option value="created_at">Date Added</option>
-                        <option value="due">Due Date</option>
-                        <option value="priority">Priority</option>
-                        <option value="tag">Tag</option>
-                    </select>
+                <div id="task-controls">
+                    <!-- FILTERS -->
+                    <div id="filter-controls">
+                        <span class="controls-label">Filter by:</span>
+
+                        <label for="status-filter">Status:</label>
+                        <select id="status-filter">
+                            <option value="all">ALL</option>
+                            <option value="active">Active</option>
+                            <option value="done">Completed</option>
+                        </select>
+                        
+                        <label for="category-filter">Category:</label>
+                        <select id="category-filter">
+                            <option value="all">ALL</option>
+                            <option value="School">School</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Others">Others</option>
+                        </select>
+
+                        <label for="priority-filter">Priority:</label>
+                        <select id="priority-filter">
+                            <option value="all">ALL</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                        </select>    
+                    </div>
+
+                    <!-- SORTING -->
+                    <div id="sort-control">
+                        <span class="controls-label">Sort by:</span>
+                        <select id="sort-select">
+                            <option value="created_at">Date Added</option>
+                            <option value="due">Due Date</option>
+                            <option value="priority">Priority</option>
+                            <option value="tag">Tag</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
 
-            <div id="task-list">
-                <!-- JS will generate the tasks here -->
-            </div>
+                <div id="task-list">
+                    <!-- JS will generate the tasks here -->
+                </div>
+            </section>
 
-        </section>
+            <!-- TODO: TRASH -->
+
+            <!-- PROFILE -->
+            <section id="profile-section" class="view" hidden>
+                <div class="profile-hero">
+                    <div id="profile-avatar" class="avatar" aria-hidden="true">?</div>
+
+                    <div>
+                        <h2 id="profile-hero-name" class="view-title">Profile</h2>
+                        <p class="view-hint">Member since <span id="profile-created">-</span></p>
+                    </div>
+                </div>
+                
+                <h3 class="group-title">Account</h3>
+                <div class="profile-card">
+                    <div class="profile-item">
+                        <span class="profile-label">Username</span>
+                        <span class="profile-value" id="profile-username">-</span>
+                        <button id="edit-username-button" class="link-button" type="button">Edit</button>
+                    </div>
+                    <div class="profile-item">
+                        <span class="profile-label">Display Name</span>
+                        <span class="profile-value" id="profile-display-name">-</span>
+                        <button id="edit-display-name-button" class="link-button" type="button">Edit</button>
+                    </div>
+                </div>
+
+                <h3 class="group-title">Security</h3>
+                <div class="profile-card">
+                    <div class="profile-item">
+                        <span class="profile-label">Password</span>
+                        <span class="profile-value">••••••••</span>
+                        <button id="change-pw-button" class="link-button" type="button" disabled title = "Coming soon">Change password</button>
+                    </div>
+                </div>
+
+                <p id="profile-message" role="status" aria-live="polite"></p>
+            </section>
+        </div>
         
         <aside id="add-task-panel">
             <h2 id="task-panel-title">Add a Task</h2>
@@ -195,5 +258,6 @@
 
     <script src="auth.js"></script>
     <script src="app.js"></script>
+    <script src="nav.js"></script>
 </body>
 </html>
