@@ -168,15 +168,16 @@ app.post("/api/auth/logout", async (req, res) => {
 
 // CRUD ROUTES
 // CREATE TASK
-app.post("/api/tasks", (req, res) => {
+app.post("/api/tasks", requireAuth, (req, res) => {
     const { title, due, priority, tag } = req.body;
+    const user_id = req.session.userId;
 
     const statement = db.prepare(`
-        INSERT INTO Task (title, due, priority, tag)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO Task (user_id, title, due, priority, tag)
+        VALUES (?, ?, ?, ?, ?)
     `);
 
-    const result = statement.run(title, due, priority, tag);
+    const result = statement.run(user_id, title, due, priority, tag);
 
     res.status(201).json({
         message: "Task created!",
@@ -186,20 +187,21 @@ app.post("/api/tasks", (req, res) => {
 
 
 // READ TASKS
-app.get("/api/tasks", (req, res) => {
+app.get("/api/tasks", requireAuth, (req, res) => {
     const tasks = db.prepare(`
         SELECT *
         FROM Task
-        WHERE deleted_at IS NULL
+        WHERE user_id = ?
+        AND deleted_at IS NULL
         ORDER BY due ASC
-    `).all();
+    `).all(req.session.userId);
 
     res.json(tasks);
 });
 
 
 // UPDATE TASK
-app.put("/api/tasks/:id", (req, res) => {
+app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
     const { title, due, priority, tag } = req.body;
 
@@ -207,9 +209,10 @@ app.put("/api/tasks/:id", (req, res) => {
         UPDATE Task
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
+        AND user_id = ?
     `);
 
-    const result = statement.run(title, due, priority, tag, id);
+    const result = statement.run(title, due, priority, tag, id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -223,17 +226,18 @@ app.put("/api/tasks/:id", (req, res) => {
 });
 
 // DELETE TASK
-app.delete("/api/tasks/:id", (req, res) => {
+app.delete("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
     const statement = db.prepare(`
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
+        AND user_id = ?
         AND deleted_at is NULL
     `);
 
-    const result = statement.run(id);
+    const result = statement.run(id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -247,16 +251,17 @@ app.delete("/api/tasks/:id", (req, res) => {
 });
 
 // RESTORE DELETED TASK
-app.put("/api/tasks/:id/restore", (req, res) => {
+app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
     const { id } = req.params;
 
     const statement = db.prepare(`
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
+        AND user_id = ?
     `);
 
-    const result = statement.run(id);
+    const result = statement.run(id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -270,7 +275,7 @@ app.put("/api/tasks/:id/restore", (req, res) => {
 });
 
 // CHECK / UNCHECK TASKS
-app.put("/api/tasks/:id/done", (req, res) => {
+app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
     const { id } = req.params;
     const { is_done } = req.body;
 
@@ -278,10 +283,11 @@ app.put("/api/tasks/:id/done", (req, res) => {
         UPDATE Task
         SET is_done = ?
         WHERE task_id = ?
+        AND user_id = ?
         AND deleted_at IS NULL
     `);
 
-    const result = statement.run(is_done ? 1 : 0, id);
+    const result = statement.run(is_done ? 1 : 0, id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
