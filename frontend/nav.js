@@ -31,6 +31,10 @@ function showView(name) {
         loadProfile();
     }
 
+    if (name === "tasks") {
+        loadTasks();
+    }
+
     window.scrollTo(0,0);
 }
 
@@ -46,7 +50,7 @@ showAuthenticated = function (user) {
     baseShowAuthenticated(user);
     document.body.classList.add("logged-in");
     sidebarGreeting.textContent = `Hello, ${user.display_name}!`;
-    showView("tasks");
+    showView("profile");
 };
 
 showLogin = function () {

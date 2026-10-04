@@ -189,7 +189,7 @@ function showLogin() {
     regFormContainer.hidden = true;
 }
 
-function showAuthenticated(user) {
+async function showAuthenticated(user) {
     authSection.hidden = true;
     document.querySelector("main").hidden = false;
 
