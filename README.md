@@ -72,11 +72,17 @@ There is nothing to run by hand. `database.js` creates `lista.db` and its tables
 | --- | --- |
 | `User` | `user_id`, `username` (unique), `display_name`, `pw_hash`, `created_at` |
 | `Task` | `task_id`, `user_id`, `title`, `due`, `priority`, `tag`, `is_done`, `created_at`, `deleted_at` |
-| `PasswordReset` | `reset_id`, `user_id`, `token_hash`, `expires_at`, `used_at`, `created_at` |
 
 Sessions live in a separate file, `sessions.db`, managed by `connect-sqlite3`.
 
-To inspect the data, open `lista.db` with [DB Browser for SQLite](https://sqlitebrowser.org/). `pw_hash` holds a bcrypt hash that starts with `$2b$10$`, never the real password. The `.db` files are listed in `.gitignore`.
+The project includes a seeder that populates lista.db with (2) sample users and their tasks for testing and demonstration. The seeder adds the sample records to the existing database without clearing or replacing existing users or tasks.
+
+Run the seeder with:
+```bash
+node backend/seed.js
+```
+
+To inspect the data, open `lista.db` with `SQLite Viewer` extension in VSCode. `pw_hash` holds a bcrypt hash that starts with `$2b$10$`, never the real password. The `.db` files are listed in `.gitignore`.
 
 ## API endpoints
 
@@ -90,8 +96,6 @@ All routes start with `/api`. Requests and responses are JSON. Routes marked *lo
 | POST | `/auth/login` | Log in |
 | GET | `/auth/me` | Current user (used to restore the session) |
 | POST | `/auth/logout` | Destroy the session |
-| GET | `/auth/reset-token?token=...` | Check that a reset link is still valid |
-| POST | `/auth/reset-password` | Set a new password using a reset token |
 
 **Profile** (login required)
 
