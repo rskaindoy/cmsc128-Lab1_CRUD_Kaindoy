@@ -56,6 +56,7 @@ showAuthenticated = function (user) {
 showLogin = function () {
     baseShowLogin();
     document.body.classList.remove("logged-in");
+    closePasswordForm();
 };
 
 // LOGOUT
@@ -228,3 +229,85 @@ function editProfileField(field) {
 
 editUsernameButton.addEventListener("click", () => editProfileField("username"));
 editDisplayNameButton.addEventListener("click", () => editProfileField("display_name"));
+
+const changePwButton = document.getElementById("change-pw-button");
+const changePwForm = document.getElementById("change-pw-form");
+const changePwMessage = document.getElementById("change-pw-message");
+const cancelPwButton = document.getElementById("cancel-pw-button");
+
+function closePasswordForm() {
+    changePwForm.reset();
+    changePwForm.hidden = true;
+    changePwButton.hidden = false;
+    setMessage(changePwMessage, "");
+
+    // put every Show/Hide toggle back to hidden
+    changePwForm.querySelectorAll(".pw-wrap input").forEach((input) => {
+        input.type = "password";
+    });
+
+    changePwForm.querySelectorAll(".pw-toggle").forEach((toggle) => {
+        toggle.textContent = "Show";
+        toggle.setAttribute("aria-label", "Show password");
+    });
+}
+
+changePwButton.addEventListener("click", () => {
+    changePwForm.hidden = false;
+    changePwButton.hidden = true;
+    setProfileMessage("");
+    document.getElementById("current-pw").focus();
+});
+
+cancelPwButton.addEventListener("click", closePasswordForm);
+
+changePwForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const current_pw = document.getElementById("current-pw").value;
+    const new_pw = document.getElementById("new-pw").value;
+    const confirm_pw = document.getElementById("confirm-pw").value;
+
+    setMessage(changePwMessage, "");
+
+    // check what we can before bothering the server
+    if (new_pw.length < 8) {
+        setMessage(changePwMessage, "New password must be at least 8 characters.");
+        return;
+    }
+
+    if (new_pw !== confirm_pw) {
+        setMessage(changePwMessage, "The new passwords don't match.");
+        return;
+    }
+
+    if (new_pw === current_pw) {
+        setMessage(changePwMessage, "New password must be different from your current one.");
+        return;
+    }
+
+    setLoading(changePwForm, true, "Saving...");
+
+    try {
+        const response = await fetch(`${API_URL}/profile/password`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            signal: AbortSignal.timeout(10000),
+            body: JSON.stringify({ current_pw, new_pw })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error);
+        }
+
+        closePasswordForm();
+        setProfileMessage(data.message || "Password updated!");
+    } catch (error) {
+        setMessage(changePwMessage, friendlyError(error));
+    } finally {
+        setLoading(changePwForm, false);
+    }
+});

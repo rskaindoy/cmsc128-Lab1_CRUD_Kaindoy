@@ -358,9 +358,61 @@ app.put("/api/profile", requireAuth, (req, res) => {
     `).run(username, display_name, req.session.userId);
 
 
-    res.json({
-        message: "Profile updated!"
-    });
+    res.json({ message: "Profile updated!" });
+});
+
+// CHANGE PASSWORD
+app.put("/api/profile/password", requireAuth, async (req, res) => {
+    const current_pw = req.body.current_pw || "";
+    const new_pw = req.body.new_pw || "";
+
+    // validate required fields
+    if (!current_pw || !new_pw) {
+        return res.status(400).json({error: "Current and new passwords are required."});
+    }
+
+    // validate new pw
+    if (new_pw.length < 8) {
+        return res.status(400).json({error: "New password must be at least 8 characters."});
+    }
+
+    // bcrypt only uses the first 72 bytes, so don't accept more than that
+    if (new_pw.length > 72) {
+        return res.status(400).json({error: "New password must be 72 characters or fewer."});
+    }
+
+    if (new_pw === current_pw) {
+        return res.status(400).json({error: "New password must be different from your current one."});
+    }
+
+    // get current user's pw hash
+    const user = db.prepare(`
+        SELECT pw_hash
+        FROM User
+        WHERE user_id = ?
+    `).get(req.session.userId);
+
+    if (!user) {
+        return res.status(404).json({error: "User not found."});
+    }
+
+    // verify current pw
+    const pwMatch = await bcrypt.compare(current_pw, user.pw_hash);
+    if (!pwMatch) {
+        return res.status(401).json({error: "Current password is incorrect."});
+    }
+
+    // hash new pw
+    const newPwHash = await bcrypt.hash(new_pw, 10);
+
+    // save new pw
+    db.prepare(`
+        UPDATE User
+        SET pw_hash = ?
+        WHERE user_id = ?
+    `).run(newPwHash, req.session.userId);
+
+    res.json({ message: "Password updated."});
 });
 
 // start server
