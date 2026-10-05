@@ -1,4 +1,5 @@
 // connects database.js to server.js
+require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
@@ -25,7 +26,7 @@ app.use(session({
         db: "sessions.db",
         dir: "./"
     }),
-    secret: "usad-session-secret",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
