@@ -89,10 +89,21 @@ app.post("/api/auth/register", async (req, res) => {
     const pw_hash = await bcrypt.hash(pw, 10);
     
     // save user
-    const result = db.prepare(`
-        INSERT INTO User (username, display_name, pw_hash)
-        VALUES (?, ?, ?)
-    `).run(username, display_name, pw_hash); 
+    let result;
+
+    try {
+        result = db.prepare(`
+            INSERT INTO User (username, display_name, pw_hash)
+            VALUES (?, ?, ?)
+        `).run(username, display_name, pw_hash);
+    } catch (err) {
+        // someone registered the same username between the check above and this insert
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+            return res.status(409).json({error: "Username is already taken."});
+        }
+
+        throw err;
+    }
 
     // acc created !
     req.session.userId = result.lastInsertRowid;      // session is for this user;  
