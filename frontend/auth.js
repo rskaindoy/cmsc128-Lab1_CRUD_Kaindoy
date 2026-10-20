@@ -56,7 +56,7 @@ function friendlyError(error) {
 
 // fetch() for routes that need a login. Sends the session cookie, and if the server says we're not logged in anymore (401), sends the user back to login screen.
 async function apiFetch(path, options = {}) {
-    const response = await fetch(`${API_URL}$(path)`, {
+    const response = await fetch(`${API_URL}${path}`, {
         credentials: "include",
         ...options
     });
