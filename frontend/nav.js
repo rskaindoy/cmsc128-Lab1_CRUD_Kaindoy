@@ -136,7 +136,7 @@ async function loadProfile() {
         editUsernameButton.hidden = false;
         editDisplayNameButton.hidden = false;
     } catch (error) {
-        setProfileMessage(error.message, true);
+        setProfileMessage(friendlyError(error), true);
     }
 }
 
@@ -151,6 +151,7 @@ function editProfileField(field) {
     input.type = "text";
     input.value = currentValue;
     input.setAttribute("aria-label", label);
+    input.maxLength = isUsername ? 20 : 50;     // same limits the server enforces
 
     const saveButton = document.createElement("button");
     saveButton.type = "button";
@@ -212,7 +213,7 @@ function editProfileField(field) {
             sidebarGreeting.textContent = `Hello, ${display_name}!`;
         } catch (error) {
             // stay in edit mode so the user can fix it
-            setProfileMessage(error.message, true);
+            setProfileMessage(friendlyError(error), true);
             input.focus();
         }
     }
