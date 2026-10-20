@@ -16,6 +16,9 @@ const bcrypt = require("bcrypt");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
+// for input validation
+const { asString, validateUsername, validateDisplayName, validatePassword } = require("./validator");
+
 // app setup
 const app = express();
 const PORT = 3000;
@@ -56,21 +59,19 @@ app.get("/", (req, res) => {
 // AUTHENTICATION ROUTES
 app.post("/api/auth/register", async (req, res) => {
     // get un, display name, pw
-    const username = (req.body.username || "").trim();
-    const display_name = (req.body.display_name || "").trim();
-    const pw = req.body.pw || "";
+    const username = asString(req.body.username);
+    const display_name = asString(req.body.display_name);
+    const pw = typeof req.body.pw === "string" ? req.body.pw : ""; // can't use asString here since asString trims
 
     // validate required fields
     if (!username || !display_name || !pw) {
         return res.status(400).json({error: "All fields are required."});
     }
 
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
-        return res.status(400).json({error: "Username must be 3-20 characters: a combination of letters, numbers, and underscores only."});
-    } 
+    const problem = validateUsername(username) || validateDisplayName(display_name) || validatePassword(pw);
 
-    if (pw.length < 8) {
-        return res.status(400).json({error: "Password must be at least 8 characters."});
+    if (problem) {
+        return res.status(400).json({error: problem});
     } 
 
     // check duplicate un (if un alr exists)
@@ -104,7 +105,8 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
     // get un and pw
-    const { username, pw } = req.body;
+    const username = asString(req.body.username);
+    const pw = typeof req.body.pw === "string" ? req.body.pw : ""; // can't use asString here since asString trims
 
     // validate required fields
     if (!username || !pw) {
@@ -346,12 +348,18 @@ app.get("/api/profile", requireAuth, (req, res) => {
 
 // UPDATE PROFILE
 app.put("/api/profile", requireAuth, (req, res) => {
-    const username = (req.body.username || "").trim();
-    const display_name = (req.body.display_name || "").trim();
+    const username = asString(req.body.username);
+    const display_name = asString(req.body.display_name);
 
     if (!username || !display_name) {
         return res.status(400).json({error: "Username and display name are required."});
     }
+
+    const problem = validateUsername(username) || validateDisplayName(display_name);
+
+    if (problem) {
+        return res.status(400).json({error: problem});
+    } 
 
     // username must be unique, ignoring the user's own row
     const taken = db.prepare(`
@@ -377,23 +385,20 @@ app.put("/api/profile", requireAuth, (req, res) => {
 
 // CHANGE PASSWORD
 app.put("/api/profile/password", requireAuth, async (req, res) => {
-    const current_pw = req.body.current_pw || "";
-    const new_pw = req.body.new_pw || "";
+    const current_pw = typeof req.body.pw === "string" ? req.body.current_pw : ""; // can't use asString here since asString trims
+    const new_pw = typeof req.body.pw === "string" ? req.body.new_pw : "";
 
     // validate required fields
     if (!current_pw || !new_pw) {
         return res.status(400).json({error: "Current and new passwords are required."});
     }
 
-    // validate new pw
-    if (new_pw.length < 8) {
-        return res.status(400).json({error: "New password must be at least 8 characters."});
-    }
+    // validate new pw (characters: 8 min, 72 max)
+    const problem = validatePassword(new_pw, "New password");
 
-    // bcrypt only uses the first 72 bytes, so don't accept more than that
-    if (new_pw.length > 72) {
-        return res.status(400).json({error: "New password must be 72 characters or fewer."});
-    }
+    if (problem) {
+        return res.status(400).json({error: problem});
+    } 
 
     if (new_pw === current_pw) {
         return res.status(400).json({error: "New password must be different from your current one."});
@@ -413,7 +418,7 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     // verify current pw
     const pwMatch = await bcrypt.compare(current_pw, user.pw_hash);
     if (!pwMatch) {
-        return res.status(401).json({error: "Current password is incorrect."});
+        return res.status(403).json({error: "Current password is incorrect."});
     }
 
     // hash new pw
