@@ -1,8 +1,5 @@
 console.log("Lista app loaded!");
 
-// store API URL
-const API_URL = "http://localhost:3000/api";
-
 // get HTML elements
 const addTaskButton = document.getElementById("add-task-button");
 const closeTaskPanel = document.getElementById("close-task-panel");
@@ -77,6 +74,7 @@ taskForm.addEventListener("submit", async (event) => {
         // update existing task
         response = await fetch(`${API_URL}/tasks/${editingID}`,{
             method: "PUT",
+            credentials: "include",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 title: title,
@@ -89,6 +87,7 @@ taskForm.addEventListener("submit", async (event) => {
         // create new task
         response = await fetch(`${API_URL}/tasks`, {
             method: "POST",
+            credentials: "include",
             headers:{"Content-Type": "application/json"},
             body: JSON.stringify({
                 title: title,
@@ -120,7 +119,9 @@ taskForm.addEventListener("submit", async (event) => {
 // READ TASKS ---------------------
 // fetch tasks from database
 async function loadTasks() {
-    const response = await fetch(`${API_URL}/tasks`);
+    const response = await fetch(`${API_URL}/tasks`, {
+        credentials: "include"
+    });
 
     if (!response.ok) {
         console.error("Failed to load tasks.");
@@ -371,7 +372,8 @@ function openEditTaskPanel(taskID, tasks) {
 // DELETE TASK ---------------------
 async function deleteTask(taskID) {
     const response = await fetch(`${API_URL}/tasks/${taskID}`,{
-        method: "DELETE"
+        method: "DELETE",
+        credentials: "include"
     }); 
 
     if (!response.ok){
@@ -406,7 +408,8 @@ function showUndoNotif(taskID){
 
 async function restoreTask(taskID){
     const response = await fetch(`${API_URL}/tasks/${taskID}/restore`,{
-        method: "PUT"
+        method: "PUT",
+        credentials: "include"
     }); 
 
     if (!response.ok){
@@ -436,6 +439,7 @@ undoButton.addEventListener("click", async() => {
 async function doneTask(taskID, isDone) {
     const response = await fetch(`${API_URL}/tasks/${taskID}/done`,{
         method: "PUT",
+        credentials: "include",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({is_done: isDone})
     }); 
