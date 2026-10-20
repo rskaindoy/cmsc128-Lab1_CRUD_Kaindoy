@@ -27,6 +27,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Express leaves req.body undefined when a request has no JSON body
+app.use((req, res, next) => {
+    req.body = req.body ?? {};
+    next();
+});
+
 // makes the session last 24 hours
 app.use(session({
     store: new SQLiteStore({
@@ -421,6 +427,16 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     `).run(newPwHash, req.session.userId);
 
     res.json({ message: "Password updated."});
+});
+
+// Express error-handling middleware; catches anything a route throws, so the frontend always gets JSON instead of an HTML error page
+app.use((err, req, res, next) => {
+    if (err.type === "entity.parse.failed") {
+        return res.status(400).json({error: "Invalid JSON."}); // bad request
+    }
+
+    console.error(err);
+    res.status(500).json({error: "Something went wrong on the server."}); // internal server error
 });
 
 // start server
