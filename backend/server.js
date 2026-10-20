@@ -31,7 +31,7 @@ app.use(express.json());
 app.use(session({
     store: new SQLiteStore({
         db: "sessions.db",
-        dir: "./"
+        dir: __dirname
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
