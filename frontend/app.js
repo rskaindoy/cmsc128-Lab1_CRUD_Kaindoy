@@ -228,6 +228,17 @@ function formatDueDate(due) {
     });
 }
 
+// ESCAPE TEXT --------------------- to safely display special chaarcters like < and > into HTML entities 
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    }[char]));
+}
+
 // DISPLAY TASKS ---------------------
 function renderTasks(tasks) {
     taskList.innerHTML = "";
@@ -250,7 +261,7 @@ function renderTasks(tasks) {
         taskCard.innerHTML = `
             <div class="task-main">
                 <input type="checkbox" class="done-task-checkbox" data-id="${task.task_id}" ${task.is_done ? "checked" : ""}>
-                <h3>${task.title}</h3>
+                <h3>${escapeHTML(task.title)}</h3>
             </div>
 
             <div class="task-details">
@@ -262,12 +273,12 @@ function renderTasks(tasks) {
                 }
 
                 ${ task.priority
-                    ? `<span class="priority-badge ${task.priority.toLowerCase()}">${task.priority}</span>`
+                    ? `<span class="priority-badge ${escapeHTML(task.priority.toLowerCase())}">${escapeHTML(task.priority)}</span>`
                     : ""
                 }
 
                 ${ task.tag
-                    ? `<span class="category-badge">${task.tag}</span>`
+                    ? `<span class="category-badge">${escapeHTML(task.tag)}</span>`
                     : ""
                 }
             </div>

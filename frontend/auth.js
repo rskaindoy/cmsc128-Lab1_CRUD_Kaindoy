@@ -109,6 +109,9 @@ loginForm.addEventListener("submit", async(event) => {
     const username = document.getElementById("login-username").value;
     const pw = document.getElementById("login-pw").value;
 
+    setMessage(loginMessage, "");
+    setLoading(loginForm, true, "Logging in...");
+    
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",
