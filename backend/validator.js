@@ -29,7 +29,7 @@ function validateDisplayName(displayName) {
 
 function validatePassword(pw, label = "Password") {
     if (pw.length < PW_MIN) {
-        return `${label} name must be at least ${PW_MIN} characters`;
+        return `${label} must be at least ${PW_MIN} characters`;
     }
 
     // bcrypt counts bytes, not characters (emoji and accented letters take more than one)
