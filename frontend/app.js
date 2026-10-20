@@ -72,9 +72,8 @@ taskForm.addEventListener("submit", async (event) => {
 
     if (editingID){
         // update existing task
-        response = await fetch(`${API_URL}/tasks/${editingID}`,{
+        response = await apiFetch(`/tasks/${editingID}`,{
             method: "PUT",
-            credentials: "include",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
                 title: title,
@@ -85,9 +84,8 @@ taskForm.addEventListener("submit", async (event) => {
         });
     } else {
         // create new task
-        response = await fetch(`${API_URL}/tasks`, {
+        response = await apiFetch(`/tasks`, {
             method: "POST",
-            credentials: "include",
             headers:{"Content-Type": "application/json"},
             body: JSON.stringify({
                 title: title,
@@ -119,9 +117,7 @@ taskForm.addEventListener("submit", async (event) => {
 // READ TASKS ---------------------
 // fetch tasks from database
 async function loadTasks() {
-    const response = await fetch(`${API_URL}/tasks`, {
-        credentials: "include"
-    });
+    const response = await apiFetch(`/tasks`);
 
     if (!response.ok) {
         console.error("Failed to load tasks.");
@@ -371,9 +367,8 @@ function openEditTaskPanel(taskID, tasks) {
 
 // DELETE TASK ---------------------
 async function deleteTask(taskID) {
-    const response = await fetch(`${API_URL}/tasks/${taskID}`,{
+    const response = await apiFetch(`/tasks/${taskID}`,{
         method: "DELETE",
-        credentials: "include"
     }); 
 
     if (!response.ok){
@@ -407,9 +402,8 @@ function showUndoNotif(taskID){
 }
 
 async function restoreTask(taskID){
-    const response = await fetch(`${API_URL}/tasks/${taskID}/restore`,{
+    const response = await apiFetch(`/tasks/${taskID}/restore`,{
         method: "PUT",
-        credentials: "include"
     }); 
 
     if (!response.ok){
@@ -437,9 +431,8 @@ undoButton.addEventListener("click", async() => {
 })
 
 async function doneTask(taskID, isDone) {
-    const response = await fetch(`${API_URL}/tasks/${taskID}/done`,{
+    const response = await apiFetch(`/tasks/${taskID}/done`,{
         method: "PUT",
-        credentials: "include",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({is_done: isDone})
     }); 

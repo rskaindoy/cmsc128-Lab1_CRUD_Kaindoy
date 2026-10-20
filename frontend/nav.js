@@ -119,7 +119,7 @@ async function loadProfile() {
     setProfileMessage("");
 
     try {
-        const response = await fetch(`${API_URL}/profile`, { credentials: "include" });
+        const response = await apiFetch("/profile");
         const data = await response.json();
 
         if (!response.ok) {
@@ -192,10 +192,9 @@ function editProfileField(field) {
         const display_name = isUsername ? profileDisplayName.textContent : newValue;
 
         try {
-            const response = await fetch(`${API_URL}/profile`, {
+            const response = await apiFetch("/profile", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                credentials: "include",
                 body: JSON.stringify({
                     username,
                     display_name
@@ -289,10 +288,9 @@ changePwForm.addEventListener("submit", async (event) => {
     setLoading(changePwForm, true, "Saving...");
 
     try {
-        const response = await fetch(`${API_URL}/profile/password`, {
+        const response = await apiFetch(`/profile/password`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
             signal: AbortSignal.timeout(10000),
             body: JSON.stringify({ current_pw, new_pw })
         });
