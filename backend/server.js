@@ -384,12 +384,20 @@ app.put("/api/profile", requireAuth, (req, res) => {
         return res.status(409).json({error: "Username is already taken."});
     }
 
-    db.prepare(`
-        UPDATE User
-        SET username = ?, display_name = ?
-        WHERE user_id = ?
-    `).run(username, display_name, req.session.userId);
+    try {
+        db.prepare(`
+            UPDATE User
+            SET username = ?, display_name = ?
+            WHERE user_id = ?
+        `).run(username, display_name, req.session.userId);
+    } catch (err) {
+        // someone took this username between the check above and this update
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+            return res.status(409).json({error: "Username is already taken."});
+        }
 
+        throw err;
+    }
 
     res.json({ message: "Profile updated!" });
 });
