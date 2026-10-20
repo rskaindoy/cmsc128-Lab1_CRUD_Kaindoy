@@ -404,8 +404,8 @@ app.put("/api/profile", requireAuth, (req, res) => {
 
 // CHANGE PASSWORD
 app.put("/api/profile/password", requireAuth, async (req, res) => {
-    const current_pw = typeof req.body.pw === "string" ? req.body.current_pw : ""; // can't use asString here since asString trims
-    const new_pw = typeof req.body.pw === "string" ? req.body.new_pw : "";
+    const current_pw = typeof req.body.current_pw === "string" ? req.body.current_pw : ""; // can't use asString here since asString trims
+    const new_pw = typeof req.body.new_pw === "string" ? req.body.new_pw : "";
 
     // validate required fields
     if (!current_pw || !new_pw) {
