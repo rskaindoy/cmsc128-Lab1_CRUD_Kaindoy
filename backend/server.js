@@ -1,5 +1,12 @@
 // connects database.js to server.js
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+// express-session refuses to start without a secret, so fail early with a clear message
+if (!process.env.SESSION_SECRET) {
+    console.error("Missing SESSION_SECRET. Copy backend/.env.example to backend/.env and set a value (see README).");
+    process.exit(1);
+}
 
 const express = require("express");
 const cors = require("cors");
