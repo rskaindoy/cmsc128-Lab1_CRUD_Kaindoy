@@ -194,18 +194,15 @@ app.post("/api/auth/logout", async (req, res) => {
 })
 
 
-// CRUD ROUTES
+// CRUD ROUTES 
 // CREATE TASK
-app.post("/api/tasks", requireAuth, (req, res) => {
+app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const { title, due, priority, tag } = req.body;
-    const user_id = req.session.userId;
 
-    const statement = db.prepare(`
-        INSERT INTO Task (user_id, title, due, priority, tag)
-        VALUES (?, ?, ?, ?, ?)
-    `);
-
-    const result = statement.run(user_id, title, due, priority, tag);
+    const result = db.prepare(`
+        INSERT INTO Task (user_id, list_id, title, due, priority, tag)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `).run(req.session.userId, req.listId, title, due, priority, tag);
 
     res.status(201).json({
         message: "Task created!",
@@ -215,14 +212,15 @@ app.post("/api/tasks", requireAuth, (req, res) => {
 
 
 // READ TASKS
-app.get("/api/tasks", requireAuth, (req, res) => {
+app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const tasks = db.prepare(`
-        SELECT *
-        FROM Task
-        WHERE user_id = ?
-        AND deleted_at IS NULL
-        ORDER BY due ASC
-    `).all(req.session.userId);
+        SELECT t.*, u.display_name AS added_by
+        FROM Task t
+        JOIN User u ON u.user_id = t.user_id
+        WHERE t.list_id = ?
+        AND t.deleted_at IS NULL
+        ORDER BY t.due ASC
+    `).all(req.listId);
 
     res.json(tasks);
 });
@@ -327,6 +325,8 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
         message: is_done ? "Task marked as done!" : "Task marked as not done!"
     });
 });
+
+
 
 // blocks requests from people who aren't logged in
 function requireAuth (req, res, next) {
