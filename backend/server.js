@@ -468,7 +468,7 @@ app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => 
         ORDER BY (l.owner_id = u.user_id) DESC, u.display_name ASC
     `).all(req.listId);
 
-    res.json(members);
+    res.json(members);  // returns array
 });
 
 // ADD MEMBER BY USERNAME

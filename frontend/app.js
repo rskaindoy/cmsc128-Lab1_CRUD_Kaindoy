@@ -53,7 +53,7 @@ const listMessage = document.getElementById("list-message");
 // for list members
 const shareListButton = document.getElementById("share-list-button"); 
 const membersPanel = document.getElementById("members-panel");
-const memberList = document.getElementById("members-list");
+const memberList = document.getElementById("member-list");
 const addMemberForm = document.getElementById("add-member-form");
 const memberUsername = document.getElementById("member-username");
 const membersMessage = document.getElementById("members-message");
@@ -78,6 +78,8 @@ async function loadLists() {
     if (!currentList()) {
         currentListId = lists[0]?.list_id ?? null;
     }
+
+    renderListNav();
 }
 
 function listNavItem(list) {
@@ -199,20 +201,20 @@ async function loadMembers(){
         return;
     }
 
-    const members = await response.json;
+    const members = await response.json();
     const isOwner = list.role === "owner";
 
-    memberList.innerHTML = members.map((member) =>
+    memberList.innerHTML = members.map((member) => `
         <li class="member-item">
             <span class="member-name">
                 ${escapeHTML(member.display_name)} <small>@${escapeHTML(member.username)}</small>
             </span>
             ${ member.role === "owner" ? `<span class="category-badge">Owner</span>` : isOwner 
-                ? `<button class="link-button muted remove-number-button" data-id="${member.user_id}" type="button">Remove</button>`
+                ? `<button class="link-button muted remove-member-button" data-id="${member.user_id}" type="button">Remove</button>`
                 : ""
             }
         </li>
-    ).join("");
+    `).join("");
 
     addMemberForm.hidden = !isOwner;
     deleteListButton.hidden = !isOwner;
@@ -232,7 +234,7 @@ shareListButton.addEventListener("click", () => {
 
 // ADD A MEMBER
 addMemberForm.addEventListener("submit", async(event) => {
-    event.preventDefault;
+    event.preventDefault();
     setMessage(membersMessage, "");
 
     const response = await apiFetch(`/lists/${currentListId}/members`, {
