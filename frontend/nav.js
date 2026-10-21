@@ -32,7 +32,7 @@ function showView(name) {
     }
 
     if (name === "tasks") {
-        loadTasks();
+        loadLists().then(loadTasks);
     }
 
     window.scrollTo(0,0);
@@ -48,6 +48,7 @@ const baseShowLogin = showLogin;
 
 showAuthenticated = function (user) {
     baseShowAuthenticated(user);
+    currentUserId = user.user_id;
     document.body.classList.add("logged-in");
     sidebarGreeting.textContent = `Hello, ${user.display_name}!`;
     showView("profile");

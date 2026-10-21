@@ -36,6 +36,30 @@ let currentPriority = "all";
 const sortSelect = document.getElementById("sort-select");
 let currentSort = "created_at";
 
+// for lists
+let lists = [];
+let currentListId = null;
+let currentUserId = null;       // set by nav.js after login
+
+function currentList() {
+    return lists.find((list) => list.list_id === currentListId);
+}
+
+async function loadLists() {
+    const response = await apiFetch("/lists");
+
+    if (!response.ok) {
+        console.error("Failed to load lists.")
+        return;
+    }
+
+    lists = await response.json();
+
+    // default to the first list (personal comes first), also resets after switching accounts
+    if (!currentList()) {
+        currentListId = lists[0]?.list_id ?? null;
+    }
+}
 
 // MANIPULATE TASK PANEL ---------------------
 
@@ -84,7 +108,7 @@ taskForm.addEventListener("submit", async (event) => {
         });
     } else {
         // create new task
-        response = await apiFetch(`/tasks`, {
+        response = await apiFetch(`/lists/${currentListId}/tasks`, {
             method: "POST",
             headers:{"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -117,7 +141,11 @@ taskForm.addEventListener("submit", async (event) => {
 // READ TASKS ---------------------
 // fetch tasks from database
 async function loadTasks() {
-    const response = await apiFetch(`/tasks`);
+    if (!currentListId) {
+        return;
+    }
+
+    const response = await apiFetch(`/lists/${currentListId}/tasks`);
 
     if (!response.ok) {
         console.error("Failed to load tasks.");
@@ -458,7 +486,3 @@ async function doneTask(taskID, isDone) {
     // refresh task list
     loadTasks();
 }
-
-
-// INITIAL LOAD ---------------------
-loadTasks();
