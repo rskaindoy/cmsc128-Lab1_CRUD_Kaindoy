@@ -41,6 +41,24 @@ let lists = [];
 let currentListId = null;
 let currentUserId = null;       // set by nav.js after login
 let activeView = null;          // set by showView() in nav.js
+const personalListNav = document.getElementById("personal-list-nav");
+const sharedListNav = document.getElementById("shared-list-nav");
+const listSelect = document.getElementById("list-select");
+const taskTitle = document.getElementById("task-title");
+const newListButton = document.getElementById("new-list-button");
+const newListForm = document.getElementById("new-list-form");
+const newListName = document.getElementById("new-list-name");
+const listMessage = document.getElementById("list-message");
+
+// for list members
+const shareListButton = document.getElementById("share-list-button"); 
+const membersPanel = document.getElementById("members-panel");
+const memberList = document.getElementById("members-list");
+const addMemberForm = document.getElementById("add-member-form");
+const memberUsername = document.getElementById("member-username");
+const membersMessage = document.getElementById("members-message");
+const leaveListButton = document.getElementById("leave-list-button");
+const deleteListButton = document.getElementById("delete-list-button");
 
 function currentList() {
     return lists.find((list) => list.list_id === currentListId);
@@ -61,15 +79,6 @@ async function loadLists() {
         currentListId = lists[0]?.list_id ?? null;
     }
 }
-
-const personalListNav = document.getElementById("personal-list-nav");
-const sharedListNav = document.getElementById("shared-list-nav");
-const listSelect = document.getElementById("list-select");
-const taskTitle = document.getElementById("task-title");
-const newListButton = document.getElementById("new-list-button");
-const newListForm = document.getElementById("new-list-form");
-const newListName = document.getElementById("new-list-name");
-const listMessage = document.getElementById("list-message");
 
 function listNavItem(list) {
     const isActive = activeView === "tasks" && list.list_id === currentListId;
@@ -103,10 +112,12 @@ function renderListNav() {
 
     const list = currentList();
     taskTitle.textContent = list ? list.name : "My Tasks";
+    shareListButton.hidden = !list || list.type === "personal";
 }
 
 function selectList(listId) {
     currentListId = Number(listId);
+    closeMembersPanel();
 
     if (activeView !== "tasks") {
         showView("tasks");          // from nav.js; reload lists and tasks
@@ -164,6 +175,111 @@ newListForm.addEventListener("submit", async (event) => {
     closeNewListForm();
     selectList(data.list_id);
 });
+
+
+// MEMBERS PANEL
+
+function closeMembersPanel() {
+    membersPanel.hidden = true;
+    addMemberForm.reset();
+    setMessage(membersMessage, "");
+}
+
+async function loadMembers(){
+    const list = currentList();
+
+    if (!list) {
+        return;
+    }
+
+    const response = await apiFetch(`/lists/${currentListId}/members`);
+
+    if (!response.ok) {
+        setMessage(membersMessage, "Couldn't load members. Please try again.");
+        return;
+    }
+
+    const members = await response.json;
+    const isOwner = list.role === "owner";
+
+    memberList.innerHTML = members.map((member) =>
+        <li class="member-item">
+            <span class="member-name">
+                ${escapeHTML(member.display_name)} <small>@${escapeHTML(member.username)}</small>
+            </span>
+            ${ member.role === "owner" ? `<span class="category-badge">Owner</span>` : isOwner 
+                ? `<button class="link-button muted remove-number-button" data-id="${member.user_id}" type="button">Remove</button>`
+                : ""
+            }
+        </li>
+    ).join("");
+
+    addMemberForm.hidden = !isOwner;
+    deleteListButton.hidden = !isOwner;
+    leaveListButton.hidden = isOwner;
+}
+
+shareListButton.addEventListener("click", () => {
+    if (!membersPanel.hidden) {
+        closeMembersPanel();
+        return;
+    }
+
+    setMessage(membersMessage, "");
+    membersPanel.hidden = false;
+    loadMembers();
+});
+
+// ADD A MEMBER
+addMemberForm.addEventListener("submit", async(event) => {
+    event.preventDefault;
+    setMessage(membersMessage, "");
+
+    const response = await apiFetch(`/lists/${currentListId}/members`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username: memberUsername.value })
+    });
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        setMessage(membersMessage, data.error);
+        return;
+    }
+
+    addMemberForm.reset();
+    setMessage(membersMessage, data.message, "success");
+
+    await loadLists();              // refreshes the member count in the sidebar
+    loadMembers();
+});
+
+// REMOVE A MEMBER (owner only)
+memberList.addEventListener("click", async (event) => {
+    const button = event.target.closest(".remove-member-button");
+
+    if (!button) {
+        return;
+    }
+
+    setMessage(membersMessage, "");
+
+    const response = await apiFetch(`/lists/${currentListId}/members/${button.dataset.id}`, {
+        method: "DELETE"
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        setMessage(membersMessage, data.error);
+        return;
+    }
+
+    await loadLists();              // refreshes the member count in the sidebar
+    loadMembers();
+})
+
+
 
 // MANIPULATE TASK PANEL ---------------------
 

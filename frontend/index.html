@@ -124,11 +124,32 @@
             <section id="task-section" class="view">
                 <div id="task-header">
                     <h2 id="task-title">My Tasks</h2>
-                    <button id="add-task-button" type="button">+ Add Task</button>
+
+                    <div class="header-actions">
+                        <button id="share-list-button" class="toolbar-button" type="button" hidden>👥 Members</button>
+                        <button id="add-task-button" type="button">+ Add Task</button>
+                    </div>
                 </div>
 
                 <!-- only shown on small screens, where the sidebar becomes a bottom bar -->
                 <select id="list-select" aria-label="Choose a list"></select>
+
+                <section id="members-panel" hidden>
+                    <h3>Members</h3>
+                    <ul id="member-list"></ul>
+
+                    <form id="add-member-form" hidden>
+                        <input type="text" id="member-username" placeholder="Username to add" aria-label="Username to add" autocomplete="off" required>
+                        <button type="submit" class="save-button">Add</button>
+                    </form>
+
+                    <p id="members-message" class="auth-message" role="alert"></p>
+
+                    <div class="members-actions">
+                        <button id="leave-list-button" class="link-button danger-text" type="button" hidden>Leave List</button>
+                        <button id="delete-list-button" class="link-button danger-text" type="button" hidden>Delete List</button>
+                    </div>
+                </section>
 
                 <div id="task-controls">
                     <!-- FILTERS -->
