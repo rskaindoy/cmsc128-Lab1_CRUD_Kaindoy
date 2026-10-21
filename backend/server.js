@@ -198,7 +198,7 @@ app.post("/api/auth/logout", async (req, res) => {
 // CREATE TASK
 app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const title = asString(req.body.title);
-    const due = req.body.title || null;         // empty string = no due date
+    const due = req.body.due || null;         // empty string = no due date
     const { priority, tag } = req.body;
 
     const problem = validateTask({ title, due, priority, tag });
@@ -252,6 +252,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
         UPDATE Task
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
+        AND deleted_at IS NULL
         AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `);
 
@@ -362,6 +363,8 @@ const createList = db.transaction((name, owner_id, type = "collab") => {
         .run(name, owner_id, type);
     db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)")
         .run(list_id, owner_id);
+
+    return list_id;
 });
 
 // blocks users who aren't in the list; ownership comes from List.owner_id only
@@ -422,7 +425,7 @@ app.post("/api/lists", requireAuth, (req, res) => {
 
     res.status(201).json({
         message: "List created!",
-        task_id: list_id
+        list_id: list_id
     });
 });
 
@@ -503,22 +506,22 @@ app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner,
 });
 
 // owner removes someone or a member themselves leave
-app.delete("/api/lists/:listId/members/userId", requireAuth, requireMember, (req, res) => {
+app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, (req, res) => {
     const target = Number(req.params.userId);
     const isSelf = target === req.session.userId;
 
-    if (!isSelf || !req.isOwner) {
+    if (!isSelf && !req.isOwner) {
         return res.status(403).json({error: "Only the list owner can remove members"});
     }
 
     const list = db.prepare("SELECT owner_id FROM List WHERE list_id = ?").get(req.listId);
 
     if (target === list.owner_id) {
-        return res.status(400).json({error: "The owner can't leace. Delete the list instead."});
+        return res.status(400).json({error: "The owner can't leave. Delete the list instead."});
     }
 
     const result = db.prepare(`
-        DELET FROM ListMember WHERE list_id = ? AND user_id = ?
+        DELETE FROM ListMember WHERE list_id = ? AND user_id = ?
     `).run(req.listId, target)
 
     if (result.changes === 0) {
