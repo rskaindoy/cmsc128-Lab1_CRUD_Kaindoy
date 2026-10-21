@@ -235,7 +235,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
         UPDATE Task
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `);
 
     const result = statement.run(title, due, priority, tag, id, req.session.userId);
@@ -259,7 +259,7 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at is NULL
     `);
 
@@ -284,7 +284,7 @@ app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `);
 
     const result = statement.run(id, req.session.userId);
@@ -309,7 +309,7 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
         UPDATE Task
         SET is_done = ?
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at IS NULL
     `);
 
