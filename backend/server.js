@@ -1,5 +1,12 @@
 // connects database.js to server.js
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
+
+// express-session refuses to start without a secret, so fail early with a clear message
+if (!process.env.SESSION_SECRET) {
+    console.error("Missing SESSION_SECRET. Copy backend/.env.example to backend/.env and set a value (see README).");
+    process.exit(1);
+}
 
 const express = require("express");
 const cors = require("cors");
@@ -8,6 +15,9 @@ const db = require("./database");
 const bcrypt = require("bcrypt");
 const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
+
+// for input validation
+const { asString, validateUsername, validateDisplayName, validatePassword } = require("./validator");
 
 // app setup
 const app = express();
@@ -20,11 +30,17 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Express leaves req.body undefined when a request has no JSON body
+app.use((req, res, next) => {
+    req.body = req.body ?? {};
+    next();
+});
+
 // makes the session last 24 hours
 app.use(session({
     store: new SQLiteStore({
         db: "sessions.db",
-        dir: "./"
+        dir: __dirname
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -43,21 +59,19 @@ app.get("/", (req, res) => {
 // AUTHENTICATION ROUTES
 app.post("/api/auth/register", async (req, res) => {
     // get un, display name, pw
-    const username = (req.body.username || "").trim();
-    const display_name = (req.body.display_name || "").trim();
-    const pw = req.body.pw || "";
+    const username = asString(req.body.username);
+    const display_name = asString(req.body.display_name);
+    const pw = typeof req.body.pw === "string" ? req.body.pw : ""; // can't use asString here since asString trims
 
     // validate required fields
     if (!username || !display_name || !pw) {
         return res.status(400).json({error: "All fields are required."});
     }
 
-    if (!/^[A-Za-z0-9_]{3,20}$/.test(username)) {
-        return res.status(400).json({error: "Username must be 3-20 characters: a combination of letters, numbers, and underscores only."});
-    } 
+    const problem = validateUsername(username) || validateDisplayName(display_name) || validatePassword(pw);
 
-    if (pw.length < 8) {
-        return res.status(400).json({error: "Password must be at least 8 characters."});
+    if (problem) {
+        return res.status(400).json({error: problem});
     } 
 
     // check duplicate un (if un alr exists)
@@ -75,10 +89,21 @@ app.post("/api/auth/register", async (req, res) => {
     const pw_hash = await bcrypt.hash(pw, 10);
     
     // save user
-    const result = db.prepare(`
-        INSERT INTO User (username, display_name, pw_hash)
-        VALUES (?, ?, ?)
-    `).run(username, display_name, pw_hash); 
+    let result;
+
+    try {
+        result = db.prepare(`
+            INSERT INTO User (username, display_name, pw_hash)
+            VALUES (?, ?, ?)
+        `).run(username, display_name, pw_hash);
+    } catch (err) {
+        // someone registered the same username between the check above and this insert
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+            return res.status(409).json({error: "Username is already taken."});
+        }
+
+        throw err;
+    }
 
     // acc created !
     req.session.userId = result.lastInsertRowid;      // session is for this user;  
@@ -91,7 +116,8 @@ app.post("/api/auth/register", async (req, res) => {
 
 app.post("/api/auth/login", async (req, res) => {
     // get un and pw
-    const { username, pw } = req.body;
+    const username = asString(req.body.username);
+    const pw = typeof req.body.pw === "string" ? req.body.pw : ""; // can't use asString here since asString trims
 
     // validate required fields
     if (!username || !pw) {
@@ -333,12 +359,18 @@ app.get("/api/profile", requireAuth, (req, res) => {
 
 // UPDATE PROFILE
 app.put("/api/profile", requireAuth, (req, res) => {
-    const username = (req.body.username || "").trim();
-    const display_name = (req.body.display_name || "").trim();
+    const username = asString(req.body.username);
+    const display_name = asString(req.body.display_name);
 
     if (!username || !display_name) {
         return res.status(400).json({error: "Username and display name are required."});
     }
+
+    const problem = validateUsername(username) || validateDisplayName(display_name);
+
+    if (problem) {
+        return res.status(400).json({error: problem});
+    } 
 
     // username must be unique, ignoring the user's own row
     const taken = db.prepare(`
@@ -352,35 +384,40 @@ app.put("/api/profile", requireAuth, (req, res) => {
         return res.status(409).json({error: "Username is already taken."});
     }
 
-    db.prepare(`
-        UPDATE User
-        SET username = ?, display_name = ?
-        WHERE user_id = ?
-    `).run(username, display_name, req.session.userId);
+    try {
+        db.prepare(`
+            UPDATE User
+            SET username = ?, display_name = ?
+            WHERE user_id = ?
+        `).run(username, display_name, req.session.userId);
+    } catch (err) {
+        // someone took this username between the check above and this update
+        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+            return res.status(409).json({error: "Username is already taken."});
+        }
 
+        throw err;
+    }
 
     res.json({ message: "Profile updated!" });
 });
 
 // CHANGE PASSWORD
 app.put("/api/profile/password", requireAuth, async (req, res) => {
-    const current_pw = req.body.current_pw || "";
-    const new_pw = req.body.new_pw || "";
+    const current_pw = typeof req.body.current_pw === "string" ? req.body.current_pw : ""; // can't use asString here since asString trims
+    const new_pw = typeof req.body.new_pw === "string" ? req.body.new_pw : "";
 
     // validate required fields
     if (!current_pw || !new_pw) {
         return res.status(400).json({error: "Current and new passwords are required."});
     }
 
-    // validate new pw
-    if (new_pw.length < 8) {
-        return res.status(400).json({error: "New password must be at least 8 characters."});
-    }
+    // validate new pw (characters: 8 min, 72 max)
+    const problem = validatePassword(new_pw, "New password");
 
-    // bcrypt only uses the first 72 bytes, so don't accept more than that
-    if (new_pw.length > 72) {
-        return res.status(400).json({error: "New password must be 72 characters or fewer."});
-    }
+    if (problem) {
+        return res.status(400).json({error: problem});
+    } 
 
     if (new_pw === current_pw) {
         return res.status(400).json({error: "New password must be different from your current one."});
@@ -400,7 +437,7 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     // verify current pw
     const pwMatch = await bcrypt.compare(current_pw, user.pw_hash);
     if (!pwMatch) {
-        return res.status(401).json({error: "Current password is incorrect."});
+        return res.status(403).json({error: "Current password is incorrect."});
     }
 
     // hash new pw
@@ -414,6 +451,16 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     `).run(newPwHash, req.session.userId);
 
     res.json({ message: "Password updated."});
+});
+
+// Express error-handling middleware; catches anything a route throws, so the frontend always gets JSON instead of an HTML error page
+app.use((err, req, res, next) => {
+    if (err.type === "entity.parse.failed") {
+        return res.status(400).json({error: "Invalid JSON."}); // bad request
+    }
+
+    console.error(err);
+    res.status(500).json({error: "Something went wrong on the server."}); // internal server error
 });
 
 // start server

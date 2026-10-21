@@ -1,6 +1,8 @@
+const path = require("path");
 const Database = require("better-sqlite3");
 
-const db = new Database("lista.db");
+// always uses the db file located next to this file in the same directory, no matter which folder the server was started 
+const db = new Database(path.join(__dirname, "lista.db"));
 
 // enable foreign key constraints
 db.pragma("foreign_keys = ON");

@@ -54,6 +54,21 @@ function friendlyError(error) {
     return error.message;
 }
 
+// fetch() for routes that need a login. Sends the session cookie, and if the server says we're not logged in anymore (401), sends the user back to login screen.
+async function apiFetch(path, options = {}) {
+    const response = await fetch(`${API_URL}${path}`, {
+        credentials: "include",
+        ...options
+    });
+
+    if (response.status === 401) {
+        setMessage(loginMessage, "Your session has expired. Please log in again.");
+        showLogin();
+    }
+
+    return response;
+}
+
 // SHOW / HIDE PW
 document.addEventListener("click", (event) => {
     const toggle = event.target.closest(".pw-toggle");
@@ -94,6 +109,9 @@ loginForm.addEventListener("submit", async(event) => {
     const username = document.getElementById("login-username").value;
     const pw = document.getElementById("login-pw").value;
 
+    setMessage(loginMessage, "");
+    setLoading(loginForm, true, "Logging in...");
+    
     try {
         const response = await fetch(`${API_URL}/auth/login`, {
             method: "POST",

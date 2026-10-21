@@ -54,16 +54,26 @@ cd cmsc128-Lab1_CRUD_Kaindoy
 2. Install the backend dependencies
 ```bash
 cd backend
-node npm install
+npm install
 ```
 
-3. Start the backend server:
+3. Create your `.env` file (the server won't start without it):
 ```bash
-node server.js
+cp .env.example .env
+```
+Open `.env` and replace `change-me` with a long random secret. You can generate one with:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+`.env` is listed in `.gitignore`, so your secret stays on your machine.
+
+4. Start the backend server (from the `backend` folder):
+```bash
+npm start
 ```
 It runs at `http://localhost:3000`.
 
-4. Start the frontend. Open `index.html` with Live Server. Use the address`http://127.0.0.1:5500`, not `localhost`, because the backend only accepts requests from that origin (CORS).
+5. Start the frontend. Open `index.html` with Live Server. Use the address`http://127.0.0.1:5500`, not `localhost`, because the backend only accepts requests from that origin (CORS).
 
 ## Database setup
 There is nothing to run by hand. `database.js` creates `lista.db` and its tables the first time the server starts.
@@ -116,7 +126,12 @@ All routes start with `/api`. Requests and responses are JSON. Routes marked *lo
 | DELETE | `/tasks/:id` | Delete a task (soft delete) |
 | PUT | `/tasks/:id/restore` | Undo a delete |
 
-Validation rules: usernames are 3-20 characters (letters, numbers, underscores); passwords are 8-72 characters.
+Validation rules: 
+- Usernames are 3-20 characters (letters, numbers, underscores)
+- Display names are up to 50 characters
+- Passwords are at least 8 and at most 72 characters.
+
+To run the validator tests: `cd backend && npm test`.
 
 ## How sessions work
 
@@ -124,7 +139,7 @@ Validation rules: usernames are 3-20 characters (letters, numbers, underscores);
 2. The session is saved in `sessions.db` (SQLite). The browser only receives a cookie (`connect.sid`) containing the session ID, never the user's data.
 3. The cookie lasts 24 hours. Because the session is in a database, the user stays logged in after a page refresh, after using the back/forward buttons, and after a backend restart.
 4. When the page loads, the frontend calls `GET /api/auth/me` to restore the logged-in state.
-5. Logging out destroys the session on the server and clears the cookie. Protected routes use a `requireAuth` middleware, so the API refuses requests after logout.
+5. If the session expires or is lost, protected routes answer `401` and the frontend sends the user back to the login screen. Logging out destroys the session on the server and clears the cookie. Protected routes use a `requireAuth` middleware, so the API refuses requests after logout.
 
 ## Screenshots
 Dashboard

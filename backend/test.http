@@ -1,0 +1,84 @@
+# manual API tests using an HTTP client (REST Client extension)
+
+@host = http://127.0.0.1:3000
+
+### Register (also logs user in)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "display_name": "Test User",
+    "pw": "testpw123"
+}
+
+### 2. Login, expect 200
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+    "username": "testuser",
+    "pw": "testpw123"
+}
+
+### 3. Wrong password, expect 401 "Invalid password."
+POST {{host}}/api/auth/login
+Content-Type: application/json
+ 
+{
+    "username": "testuser",
+    "pw": "not-the-password"
+}
+
+### 4. Unknown username, expect 401 "Invalid username"
+POST {{host}}/api/auth/login
+Content-Type: application/json
+ 
+{
+    "username": "nobody_here",
+    "pw": "whatever123"
+}
+
+### 5. Check current session, expect 200 while logged in
+GET {{host}}/api/auth/me
+
+### 6. Create a task, expect 201 while logged in
+POST {{host}}/api/tasks
+Content-Type: application/json
+
+{
+    "title": "Study CMSC 131",
+    "due": "2026-10-30T10:00",
+    "priority": "High",
+    "tag": "School"
+}
+
+### 7. Profile rules, expect 400 (username has a space)
+PUT {{host}}/api/profile
+Content-Type: application/json
+
+{
+    "username": "bad name",
+    "display_name": "Test User"
+}
+
+### 8. Wrong current password, expect 403
+PUT {{host}}/api/profile/password
+Content-Type: application/json
+
+{
+    "current_pw": "wrong-current",
+    "new_pw": "brandnewpw1"
+}
+
+### 9. Malformed JSON, expect 400 {"error":"Invalid JSON."}
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ not json
+
+### 10. Logout
+POST {{host}}/api/auth/logout
+
+### 11. Tasks after logout, expect 401
+GET {{host}}/api/tasks
