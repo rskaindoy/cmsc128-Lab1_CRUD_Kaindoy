@@ -437,6 +437,55 @@ app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req,
     res.json({message: "List deleted."});
 });
 
+
+// LIST MEMBER ROUTES
+// GET LIST MEMBERS
+app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => {
+    const members = db.prepare(`
+        SELECT u.user_id, u.username, u.display_name,
+            CASE WHEN l.owner_id = u.user_id THEN 'owner' ELSE 'editor' END AS role
+        FROM ListMember lm
+        JOIN User u ON u.user_id = lm.user_id
+        JOIN List l ON l.list_id = lm.list_id
+        WHERE lm.list_id = ?
+        ORDER BY (l.owner_id = u.user_id) DESC, u.display_name ASC
+    `).all(req.listId);
+
+    res.json(members);
+});
+
+// ADD MEMBER BY USERNAME
+app.post("/api/lists:listId/members", requireAuth, requireMember, requireOwner, (req, res) => {
+    if (req.listType === "personal") {
+        return res.status(400).json({error: "Personal list can't be shared"});
+    }
+
+    const username = asString(req.body.username);
+
+    if (!username) {
+        return res.status(400).json({error: "Username is required"});
+    }
+
+    const user = db.prepare("SELECT user_id FROM User WHERE username = ?").get(username);
+
+    if (!user) {
+        return res.status(404).json({error: "No user with that username"});
+    }
+
+    try {
+        db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)").run(req.listId, user.user_id);
+    } catch (err) {
+        if (err.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
+            return res.status(404).json({error: "That user is already in this list"});
+        }
+
+        throw err;
+    }
+
+    res.status(201).json({message: "Member added!"});
+});
+
+
 // TODO: trash routes, delete forever feature
 
 
