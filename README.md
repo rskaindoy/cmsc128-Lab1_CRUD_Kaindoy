@@ -252,9 +252,14 @@ Deleting a Task (Confirmation Pop-up)
 Working Filter System
 <img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 12 PM" src="https://github.com/user-attachments/assets/f8f30d58-97b1-457c-adfb-afa152c37fd4" />
 
+Login Page
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 46 56 PM" src="https://github.com/user-attachments/assets/ca9f006c-6e99-42d6-bed4-81368cd64019" />
+
+Register Page
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 47 10 PM" src="https://github.com/user-attachments/assets/92e1489c-d42a-4893-9b81-b9d1c0143e9f" />
+
 Profile Page
 <img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 40 PM" src="https://github.com/user-attachments/assets/7b091cf3-2a5c-4b51-8232-a573529857cf" />
-
 
 Shared List of User 1 
 <img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 26 PM" src="https://github.com/user-attachments/assets/fb39a258-afe9-47b1-9de4-7ce2b7c3ee17" />
