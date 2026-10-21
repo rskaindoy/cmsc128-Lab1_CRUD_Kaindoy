@@ -17,7 +17,7 @@ const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
 // for input validation
-const { asString, validateUsername, validateDisplayName, validatePassword } = require("./validator");
+const { asString, validateUsername, validateDisplayName, validatePassword, validateTask } = require("./validator");
 
 // app setup
 const app = express();
@@ -197,7 +197,15 @@ app.post("/api/auth/logout", async (req, res) => {
 // CRUD ROUTES 
 // CREATE TASK
 app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
-    const { title, due, priority, tag } = req.body;
+    const title = asString(req.body.title);
+    const due = req.body.title || null;         // empty string = no due date
+    const { priority, tag } = req.body;
+
+    const problem = validateTask({ title, due, priority, tag });
+
+    if (problem) {
+        return res.status(400).json({error: problem});
+    }
 
     const result = db.prepare(`
         INSERT INTO Task (user_id, list_id, title, due, priority, tag)
@@ -229,7 +237,16 @@ app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 // UPDATE TASK
 app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
-    const { title, due, priority, tag } = req.body;
+    
+    const title = asString(req.body.title);
+    const due = req.body.title || null;         // empty string = no due date
+    const { priority, tag } = req.body;
+
+    const problem = validateTask({ title, due, priority, tag });
+
+    if (problem) {
+        return res.status(400).json({error: problem});
+    }
 
     const statement = db.prepare(`
         UPDATE Task
