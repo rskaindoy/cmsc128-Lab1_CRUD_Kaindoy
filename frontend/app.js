@@ -561,6 +561,11 @@ function renderTasks(tasks) {
             <div class="task-details">
                 <p>Due: ${formatDueDate(task.due)}</p>
                 
+                ${ currentList()?.type === "collab"
+                    ? `<p>Added by ${escapeHTML(task.added_by)}</p>`
+                    : ""
+                }
+
                 ${ task.due && new Date(task.due) < new Date() && !task.is_done
                     ? `<span class="overdue-badge">Overdue</span>`
                     : ""
