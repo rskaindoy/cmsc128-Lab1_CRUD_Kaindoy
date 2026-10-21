@@ -262,7 +262,7 @@ Shared List of User 1
 Members List Panel
 <img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 04 17 PM" src="https://github.com/user-attachments/assets/52703ad0-34fa-4b8c-8ea3-46752937a1d2" />
 
-View of Member 2 (Not in User 1's Shared List)
+View of User 2 (Not in User 1's Shared List)
 <img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 04 38 PM" src="https://github.com/user-attachments/assets/53e550b5-9408-4c79-8726-199e252763e3" />
 
 
