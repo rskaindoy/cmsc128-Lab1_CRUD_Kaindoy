@@ -107,6 +107,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     // acc created !
     req.session.userId = result.lastInsertRowid;      // session is for this user;  
+    createList("My Tasks", result.lastInsertRowid, "personal");
 
     res.status(201).json({
         message: "Account created successfully.",
@@ -331,6 +332,46 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
 function requireAuth (req, res, next) {
     if (!req.session.userId) {
         return res.status(401).json({error: "Not authenticated"});
+    }
+
+    next();
+}
+
+// LIST HELPERS
+// creates the list and its owner's membership together, or neither
+const createList = db.transaction((name, owner_id, type = "collab") => {
+    const { lastInsertRowid: list_id } = db
+        .prepare("INSERT INTO List (name, owner_id, type) VALUES (?, ?, ?)")
+        .run(name, owner_id, type);
+    db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)")
+        .run(list_id, owner_id);
+});
+
+// blocks users who aren't in the list; ownership comes from List.owner_id only
+function requireMember(req, res, next) {
+    const list_id = Number(req.params.listId);
+
+    const list = db.prepare(`
+        SELECT l.owner_id, l.type
+        FROM List l
+        JOIN ListMember lm ON lm.list_id = l.list_id
+        WHERE l.list_id = ? AND lm.user_id = ?
+    `).get(list_id, req.session.userId);
+
+    // 404 instead of 403 so people can't probe which list ids exist
+    if (!list) {
+        return res.status(404).json({error: "List not found."});
+    }
+
+    req.listId = list_id;
+    req.listType = list_type;
+    req.isOwner = list.owner_id === req.session.userId;
+    next();
+}
+
+function requireOwner(req, res, next) {
+     if (!req.isOwner) {
+        return res.status(403).json({error: "Only the list owner can do that."});
     }
 
     next();
