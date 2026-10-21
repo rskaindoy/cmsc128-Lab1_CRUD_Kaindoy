@@ -277,9 +277,53 @@ memberList.addEventListener("click", async (event) => {
 
     await loadLists();              // refreshes the member count in the sidebar
     loadMembers();
-})
+});
 
+// after leaving or deleting, the list is gone for this user, so fall back to the personal list
+async function afterLeavingList() {
+    closeMembersPanel();
+    currentListId = null;
+    await loadLists();              
+    loadTasks();
+}
 
+// LEAVE LIST 
+leaveListButton.addEventListener("click", () => {
+    const list = currentList();
+
+    askConfirm(`Leave "${list.name}"? You'll lose access to its tasks.`, "Leave", async () => {
+        const response = await apiFetch(`/lists/${currentListId}/members/${currentUserId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            setMessage(membersMessage, data.error);
+            return;
+        }
+
+        afterLeavingList();
+    });
+});
+
+// DELETE LIST
+deleteListButton.addEventListener("click", () => {
+    const list = currentList();
+
+    askConfirm(`Delete "${list.name}" and all its tasks for everyone?`, "Delete", async () => {
+        const response = await apiFetch(`/lists/${currentListId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            setMessage(membersMessage, data.error);
+            return;
+        }
+
+        afterLeavingList();
+    });
+});
 
 // MANIPULATE TASK PANEL ---------------------
 
