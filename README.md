@@ -3,7 +3,7 @@
 **One step at a time.**
 *Matatapos din 'yan.*
 
-USAD is a simple, personal task management web application with user accounts. Each user signs up, logs in, and manages their own tasks, keeping track of what they need to do and stay organized.
+USAD is a simple, personal task management web application, helping users keep track of what they need to do and stay organized. Each user signs up, logs in, and manages their own tasks in a private personal list, or works together with other users in shared (collaborative) lists.
 
 ## Tech Stack
 
@@ -35,6 +35,27 @@ I chose HTML, CSS, and JavaScript for the frontend because they are lightweight 
 - Log in, log out, and stay logged in after a refresh or server restart
 - Profile page where user can view and change their username, display name, and password
 - All account, profile, and task routes are protected on the server
+
+**Collaborative To-Do Lists**
+- Every user has a private **Personal list** (created automatically on sign up)
+- Create **shared lists** and switch between your Personal list and shared lists from the sidebar
+- The list owner can add other users by username and remove anyone in the list
+- Members can leave a shared list, and the owner can delete it
+- Users only see the lists they own or were added to
+- Tasks in shared lists show who added them
+
+## How Activity 1 and Activity 2 were merged
+
+- **Activity 1 (CRUD tasks):** Developed through seperate feature branches, with the last, completed `feat/ui` branch merged into `main`. Activity 1 provided task creation, viewing, updating, deletion, filtering, sorting, and undo delete.
+- **Activity 2 (registration and login):** Developed on the `act2-accounts` branch, as instructed, and was merged into `main`. Activity 2 added user registration, login, user profile, session management, and password hashing.
+- **Merge strategy** Activity 1's feature branches were merged into `main`, with `feat/ui` as the final feature branch merged. The `act2-accounts` branch, which built upon Activity 1's existing implementation, was subsequently merged into `main`. Then, `act3-ubac` branch was created from the updated `main` branch to implement user-based access control.
+- **What changed to integrate them:**
+    - Added a `user_id` column to the `Task` table to associate each task with its owner.
+    - Updated task queries to retrieve and modify only tasks belonging to the authenticated user.
+    - Protected task routes using the `requireAuth` middleware.
+    - Redirected users to their To-Do List after successful login.
+    - Centralized frontend API requests through `apiFetch()`, which includes session credentials and handles `401 Unauthorized` responses by returning users to the login screen.
+- **Conflicts resolved:** No merge conflicts occurred during integration.
 
 ## How to Run Locally
 
@@ -78,19 +99,60 @@ It runs at `http://localhost:3000`.
 ## Database setup
 There is nothing to run by hand. `database.js` creates `lista.db` and its tables the first time the server starts.
 
+### Schema
 | Table | Purpose |
 | --- | --- |
 | `User` | `user_id`, `username` (unique), `display_name`, `pw_hash`, `created_at` |
-| `Task` | `task_id`, `user_id`, `title`, `due`, `priority`, `tag`, `is_done`, `created_at`, `deleted_at` |
+| `Task` | `task_id`, `user_id` (FK to `User`, the creator), `list_id` (FK to `List`), `title`, `due`, `priority`, `tag`, `is_done`, `created_at`, `deleted_at` |
+| `List` | `list_id`, `name`, `owner_id` (FK to `User`), `type` (`personal` or `collab`), `created_at` |
+| `ListMember` | `list_id` + `user_id` (composite primary key, both foreign keys), `added_at` |
 
 Sessions live in a separate file, `sessions.db`, managed by `connect-sqlite3`.
 
-The project includes a seeder that populates lista.db with (2) sample users and their tasks for testing and demonstration. The seeder adds the sample records to the existing database without clearing or replacing existing users or tasks.
-
-Run the seeder with:
-```bash
-node backend/seed.js
+### How the entities relate
+```mermaid
+erDiagram
+    User ||--|{ List : "owns"
+    User ||--|{ ListMember : "belongs via"
+    List ||--|{ ListMember : "has members"
+    List ||--o{ Task : "contains"
+    User ||--o{ Task : "creates"
 ```
+
+- A user owns at least one list (their personal list) and can own any number of shared lists. Each list has exactly one owner.
+- A user has at least one membership record (the owner is a member of their own lists). Each membership record belongs to exactly one user.
+- A list has at least one membership record (its owner). Each membership record belongs to exactly one list.
+- A list contains zero or many tasks. Each task belongs to exactly one list.
+- A user creates zero or many tasks. Each task is created by exactly one user.
+
+Other Notes:
+- Each user has exactly one `personal` list (enforced by a unique index). Personal lists can't be shared or deleted.
+- `ListMember` only says who is allowed to access a list
+- `List.owner_id` records who **owns** a list
+- `Task.user_id` records who **created** the task. Access to a task is decided by membership in the task's list.
+- The schema is normalized.
+
+### Seeder
+
+The project includes a seeder that populates `lista.db` with sample users, lists, and tasks for testing and demonstration. By default, it adds the sample records to the existing database without clearing or replacing existing users or tasks, so it is safe to run more than once. 
+
+Run these commands from the project root:
+```bash
+cd backend
+npm run seed            # add sample data
+node seed.js --reset    # delete existing users, lists, and tasks, then reseed
+```
+Warning: --reset deletes existing database records. Use it only when you want to start fresh with sample data.
+
+Sample logins (password: `password123`):
+
+| User | Sees |
+| --- | --- |
+| `nikko` | My Tasks, Nikko's Group List |
+| `victor` | My Tasks, Victor's Group List, Nikko's Group List (added by Nikko) |
+| `bea` | My Tasks only (used to test that access is denied) |
+
+Tables are created with `CREATE TABLE IF NOT EXISTS`, so they are never changed once they exist. After pulling a schema change, stop the server, delete `lista.db` and `sessions.db`, then start it again.
 
 To inspect the data, open `lista.db` with `SQLite Viewer` extension in VSCode. `pw_hash` holds a bcrypt hash that starts with `$2b$10$`, never the real password. The `.db` files are listed in `.gitignore`.
 
@@ -102,7 +164,7 @@ All routes start with `/api`. Requests and responses are JSON. Routes marked *lo
 
 | Method | Route | Description |
 | --- | --- | --- |
-| POST | `/auth/register` | Create an account and log in |
+| POST | `/auth/register` | Create an account, create the Personal list, and log in |
 | POST | `/auth/login` | Log in |
 | GET | `/auth/me` | Current user (used to restore the session) |
 | POST | `/auth/logout` | Destroy the session |
@@ -115,13 +177,25 @@ All routes start with `/api`. Requests and responses are JSON. Routes marked *lo
 | PUT | `/profile` | Update username and display name |
 | PUT | `/profile/password` | Change password (needs the current password) |
 
-**Tasks** (login required, each user only sees their own)
-
-| Method | Route | Description |
+**Lists and members** (login required)
+| Method | Route | Who may call it |
 | --- | --- | --- |
-| GET | `/tasks` | List tasks |
-| POST | `/tasks` | Create a task |
-| PUT | `/tasks/:id` | Edit a task |
+| GET | `/lists` | Any user. Returns only the lists they are a member of |
+| POST | `/lists` | Any user. Create a shared list they own |
+| PUT | `/lists/:listId` | Owner only. Rename |
+| DELETE | `/lists/:listId` | Owner only. Not allowed for Personal lists |
+| GET | `/lists/:listId/members` | Members of the list |
+| POST | `/lists/:listId/members` | Owner only. Not allowed for Personal lists |
+| DELETE | `/lists/:listId/members/:userId` | Owner removes a member, or a member leaves. The owner can't be removed |
+
+
+**Tasks** (login required)
+
+| Method | Route | Description / Ownership check|
+| --- | --- | --- |
+| GET | `/lists/:listId/tasks` | List tasks. User must be a member of the list |
+| POST | `/lists/:listId/tasks` | Create a task. User must be a member of the list |
+| PUT | `/tasks/:id` | Edit a task. The task's list must be one the user belongs to |
 | PUT | `/tasks/:id/done` | Mark done or not done |
 | DELETE | `/tasks/:id` | Delete a task (soft delete) |
 | PUT | `/tasks/:id/restore` | Undo a delete |
@@ -130,8 +204,29 @@ Validation rules:
 - Usernames are 3-20 characters (letters, numbers, underscores)
 - Display names are up to 50 characters
 - Passwords are at least 8 and at most 72 characters.
+- List names are required, up to 50 characters.
+- Task titles are required, up to 255 characters; priority must be Low, Medium, or High; category must be School, Personal, or Others; due date must be a valid date (or empty).
 
 To run the validator tests: `cd backend && npm test`.
+
+## How Ownership is checked
+
+Every check happens on the server. Hiding buttons in the page is only a convenience.
+
+1. **Logged in?** `requireAuth` checks the session. No sesssion means `401`.
+2. **Member of the list?** For `lists/:listId/...` routes, `requireMember` looks for a row joining `List` and `ListMember` for this list id and the logged-in user's id. No row means `404`.
+3. **Owner?** Owner-only routes also run `requireOwner`, which compares `List.owner_id` with the logged-in user's id. Not the owner means `403`.
+4. **Routes that only have a task id** put the check inside the query itself:
+
+```sql
+UPDATE Task
+SET title = ?, due = ?, priority = ?, tag = ?
+WHERE task_id = ?
+AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
+```
+
+If the task is not in one of the user's lists, no row changes and the API answers `404`.
+
 
 ## How sessions work
 
