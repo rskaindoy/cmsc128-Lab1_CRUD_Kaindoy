@@ -15,7 +15,7 @@ const confirmDeleteButton = document.getElementById("confirm-delete-button");
 
 deleteConfirmation.style.display = "none";
 
-let taskToDelete = null;
+let pendingConfirm = null;      // what to run if user confirms
 
 // for undo notif
 const undoNotif = document.getElementById("undo-notif");
@@ -448,9 +448,7 @@ function renderTasks(tasks) {
             }
 
             // won't delete yet, will only show the confirmation
-            taskToDelete = taskID;
-            deleteMsg.textContent =`Are you sure you want to delete "${task.title}"?`;
-            deleteConfirmation.style.display = "block";
+            askConfirm(`Are you sure you want to delete "${task.title}"?`, "Delete", () => deleteTask(taskID));
         });
     });
 
@@ -467,23 +465,28 @@ function renderTasks(tasks) {
     });
 }
 
-// DELETE CONFIRMATION ACTIONS ---------------------
+// CONFIRMATION NOTIF (shared by deleting tasks, leaving lists, deleting lists) ---------------------
+function askConfirm(message, confirmLabel, onConfirm) {
+    deleteMsg.textContent = message;
+    confirmDeleteButton.textContent = confirmLabel;
+    pendingConfirm = onConfirm;
+    deleteConfirmation.style.display = "block";
+}
+
 cancelDeleteButton.addEventListener("click", () => {
-    taskToDelete = null;
+    pendingConfirm = null;
     deleteConfirmation.style.display = "none";
 });
 
 confirmDeleteButton.addEventListener("click", async () => {
-    if (!taskToDelete) {
-        return;
-    }
+    const action = pendingConfirm;
 
-    const taskID = taskToDelete;
-
-    taskToDelete = null;
+    pendingConfirm = null;
     deleteConfirmation.style.display = "none";
 
-    await deleteTask(taskID);
+    if (action) {
+        await action();
+    }
 });
 
 // EDIT TASK ---------------------
