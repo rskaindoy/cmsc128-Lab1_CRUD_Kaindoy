@@ -1,4 +1,4 @@
-# USAD
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 02 18 PM" src="https://github.com/user-attachments/assets/5fdc0214-e71a-47e6-b872-b13520d0e860" /># USAD
 
 **One step at a time.**
 *Matatapos din 'yan.*
@@ -237,20 +237,32 @@ If the task is not in one of the user's lists, no row changes and the API answer
 5. If the session expires or is lost, protected routes answer `401` and the frontend sends the user back to the login screen. Logging out destroys the session on the server and clears the cookie. Protected routes use a `requireAuth` middleware, so the API refuses requests after logout.
 
 ## Screenshots
-Dashboard
-<img width="1680" height="964" alt="Screenshot 2026-09-11 at 11 54 09 PM" src="https://github.com/user-attachments/assets/39e79aaf-19d5-4be3-b203-232184f23fc8" />
+Dashboard of User 1 (Personal List)
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 02 18 PM" src="https://github.com/user-attachments/assets/fb022638-68f5-4ce2-9e28-89d4f956f0e8" />
 
 Adding a Task
-<img width="1680" height="964" alt="Screenshot 2026-09-11 at 11 54 25 PM" src="https://github.com/user-attachments/assets/69e1bce9-6f9c-4968-ac3d-cb583c4f9414" />
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 02 32 PM" src="https://github.com/user-attachments/assets/226877db-eef6-4197-b3df-e5b4e5e27712" />
 
 Editing a Task
-<img width="1680" height="964" alt="Screenshot 2026-09-11 at 11 54 40 PM" src="https://github.com/user-attachments/assets/5866fb04-ce8d-4edd-99b6-7dc61aff425d" />
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 02 47 PM" src="https://github.com/user-attachments/assets/07c4fd27-8eef-4d6a-8707-dfbfb3778e9e" />
 
 Deleting a Task (Confirmation Pop-up)
-<img width="1680" height="964" alt="Screenshot 2026-09-11 at 11 55 13 PM" src="https://github.com/user-attachments/assets/8810b8f0-a50a-47f1-af7a-1b797f59b464" />
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 02 57 PM" src="https://github.com/user-attachments/assets/5f21e1e2-1830-4ce1-a749-ce37d43a2ab8" />
 
 Working Filter System
-<img width="1680" height="964" alt="Screenshot 2026-09-11 at 11 55 04 PM" src="https://github.com/user-attachments/assets/b53fd950-249d-44f7-9917-7d4256bfed51" />
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 12 PM" src="https://github.com/user-attachments/assets/f8f30d58-97b1-457c-adfb-afa152c37fd4" />
 
+Profile Page
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 40 PM" src="https://github.com/user-attachments/assets/7b091cf3-2a5c-4b51-8232-a573529857cf" />
+
+
+Shared List of User 1 
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 03 26 PM" src="https://github.com/user-attachments/assets/fb39a258-afe9-47b1-9de4-7ce2b7c3ee17" />
+
+Members List Panel
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 04 17 PM" src="https://github.com/user-attachments/assets/52703ad0-34fa-4b8c-8ea3-46752937a1d2" />
+
+View of Member 2 (Not in User 1's Shared List)
+<img width="1680" height="1050" alt="Screenshot 2026-10-21 at 11 04 38 PM" src="https://github.com/user-attachments/assets/53e550b5-9408-4c79-8726-199e252763e3" />
 
 
