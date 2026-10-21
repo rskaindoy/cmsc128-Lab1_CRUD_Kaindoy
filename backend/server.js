@@ -377,6 +377,66 @@ function requireOwner(req, res, next) {
     next();
 }
 
+// LIST ROUTES
+// VIEW LIST
+app.get("/api/lists", requireAuth, (req, res) => {
+    const lists = db.prepare(`
+        SELECT l.list_id, l.name, l.type,
+            CASE WHEN l.owner_id = ? THEN 'owner' ELSE 'editor' END AS role,
+            (SELECT COUNT(*) FROM ListMember WHERE list_id = l.list_id) AS member_count
+        FROM List l
+        JOIN ListMember lm ON lm.list_id = l.list_id
+        WHERE lm.user_id = ?
+        ORDER BY (l.type = 'personal') DESC, l.created_at ASC
+    `).all(req.session.userId, req.session.userId);
+
+    res.json(lists);
+});
+
+// CREATE A NEW COLLAB LIST
+app.post("/api/lists", requireAuth, (req, res) => {
+    const name = asString(req.body.name);
+
+    if (!name || name.length > 50) {
+        return res.status(400).json({error: "List name is required (max 50 characters)"});
+    }
+
+    const list_id = createList(name, req.session.userId, "collab");
+
+    res.status(201).json({
+        message: "List created!",
+        task_id: list_id
+    });
+});
+
+// RENAME LIST
+app.put("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+    const name = asString(req.body.name);
+
+    if (!name || name.length > 50) {
+        return res.status(400).json({error: "List name is required (max 50 characters)"});
+    }
+
+    db.prepare("UPDATE List SET name = ? WHERE list_id = ?").run(name, req.listId);
+
+    res.json({message: "List renamed!"});
+});
+
+// DELETE LIST
+app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+    if (req.listType === "personal") {
+        return res.status(400).json({error: "You can't delete your personal list."});
+    }
+
+    db.transaction(() => {
+        db.prepare("DELETE FROM Task WHERE list_id = ?").run(req.listId);
+        db.prepare("DELETE FROM ListMember WHERE list_id = ?").run(req.listId);
+        db.prepare("DELETE FROM List WHERE list_id = ?").run(req.listId);
+    })();
+
+    res.json({message: "List deleted."});
+});
+
 // TODO: trash routes, delete forever feature
 
 
