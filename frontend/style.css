@@ -910,6 +910,22 @@ body:has(#add-task-panel.open) #content {
         text-align: center;
     }
 
+    #personal-list-nav {
+        display: contents;      /* so the personal list sits in the bottom bar like a normal tab */
+    }
+
+    .nav-group-title,
+    #shared-list-nav,
+    #new-list-form,
+    #new-list-button,
+    #list-message {
+        display: none;
+    }
+
+    #list-select {
+        display: block;
+    }
+
     #logout-button { 
         margin-top: 0;
         width: auto;
@@ -1074,6 +1090,16 @@ body:not(.logged-in) header {
 
 .auth-switch .link-button {
     padding: 4px 6px;
+    border: none;
+    background: none;
+    color: var(--green);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-switch .link-button:hover {
+    text-decoration: underline;
 }
 
 .pw-toggle:focus-visible, 
@@ -1101,3 +1127,178 @@ body:not(.logged-in) header {
 
 .pw-form-actions .save-button { padding: 8px 18px; }
 .pw-form-actions .save-button:disabled { opacity: 0.7; cursor: wait; }
+
+/* sidebar lists */
+.nav-group-title {
+    margin: 16px 12px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #777;
+}
+
+#shared-list-nav {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+.list-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-empty {
+    margin: 4px 12px;
+    font-size: 13px;
+    color: #777;
+}
+
+.nav-item.add-list {
+    color: var(--green);
+}
+
+.nav-item.add-list[hidden] { display: none; }
+
+#new-list-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 4px 8px;
+}
+
+#new-list-form[hidden] { display: none; }
+
+#new-list-name {
+    width: 100%;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+}
+
+#new-list-name:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
+}
+
+.new-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#list-message {
+    min-height: 0;
+    margin: 2px 12px 8px;
+    font-size: 13px;
+}
+
+#list-message:empty { margin: 0; }
+
+/* small-screen list picker (sidebar lists don't fit in the bottom bar) */
+#list-select {
+    display: none;
+    width: 100%;
+    margin-bottom: 16px;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+    background-color: white;
+    color: var(--charcoal);
+    cursor: pointer;
+}
+
+/* list header + members panel */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-button {
+    padding: 10px 14px;
+    border: 1px solid #e5ded2;
+    border-radius: 10px;
+    background-color: white;
+    color: var(--charcoal);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.toolbar-button:hover { background-color: var(--cream); }
+
+.toolbar-button[hidden] { display: none; }
+
+#members-panel {
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    background-color: white;
+    border: 1px solid #e5ded2;
+    border-radius: 12px;
+}
+
+#members-panel[hidden] { display: none; }
+
+#members-panel h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+#member-list {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #e5ded2;
+}
+
+.member-item:first-child { border-top: none; }
+
+.member-name { flex: 1; }
+
+.member-item small {
+    color: #777;
+    font-size: 13px;
+}
+
+#add-member-form {
+    display: flex;
+    gap: 8px;
+}
+
+#add-member-form[hidden] { display: none; }
+
+#add-member-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+}
+
+#add-member-form input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
+}
+
+#members-message { margin-bottom: 0; }
+
+.members-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.link-button.danger-text { color: #B3401F; }
+
+.link-button.danger-text:hover { background-color: #f5ddd6; }

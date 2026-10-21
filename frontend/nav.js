@@ -13,6 +13,8 @@ const views = {
 
 // VIEW SWITCHING
 function showView(name) {
+    activeView = name;
+
     Object.entries(views).forEach(([key, section]) => {
         section.hidden = key !== name;
     });
@@ -27,13 +29,20 @@ function showView(name) {
 
     addTaskPanel.classList.remove("open"); // from app.js
 
+    renderListNav();                        // highlights the active list, or none when on Profile
+
     if (name === "profile") {
         loadProfile();
     }
 
-    if (name === "tasks") {
-        loadTasks();
-    }
+    // the sidebar needs the list in every view, not just Tasks
+    loadLists().then(() => {
+        renderListNav();
+        
+        if (name === "tasks") {
+            loadTasks();
+        }
+    });
 
     window.scrollTo(0,0);
 }
@@ -48,15 +57,18 @@ const baseShowLogin = showLogin;
 
 showAuthenticated = function (user) {
     baseShowAuthenticated(user);
+    currentUserId = user.user_id;
     document.body.classList.add("logged-in");
     sidebarGreeting.textContent = `Hello, ${user.display_name}!`;
-    showView("profile");
+    showView("tasks");
 };
 
 showLogin = function () {
     baseShowLogin();
     document.body.classList.remove("logged-in");
     closePasswordForm();
+    lists = [];
+    currentListId = null;
 };
 
 // LOGOUT

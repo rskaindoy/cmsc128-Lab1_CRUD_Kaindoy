@@ -17,7 +17,7 @@ const session = require("express-session");
 const SQLiteStore = require("connect-sqlite3")(session);
 
 // for input validation
-const { asString, validateUsername, validateDisplayName, validatePassword } = require("./validator");
+const { asString, validateUsername, validateDisplayName, validatePassword, validateTask } = require("./validator");
 
 // app setup
 const app = express();
@@ -107,6 +107,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     // acc created !
     req.session.userId = result.lastInsertRowid;      // session is for this user;  
+    createList("My Tasks", result.lastInsertRowid, "personal");
 
     res.status(201).json({
         message: "Account created successfully.",
@@ -193,18 +194,23 @@ app.post("/api/auth/logout", async (req, res) => {
 })
 
 
-// CRUD ROUTES
+// CRUD ROUTES 
 // CREATE TASK
-app.post("/api/tasks", requireAuth, (req, res) => {
-    const { title, due, priority, tag } = req.body;
-    const user_id = req.session.userId;
+app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
+    const title = asString(req.body.title);
+    const due = req.body.due || null;         // empty string = no due date
+    const { priority, tag } = req.body;
 
-    const statement = db.prepare(`
-        INSERT INTO Task (user_id, title, due, priority, tag)
-        VALUES (?, ?, ?, ?, ?)
-    `);
+    const problem = validateTask({ title, due, priority, tag });
 
-    const result = statement.run(user_id, title, due, priority, tag);
+    if (problem) {
+        return res.status(400).json({error: problem});
+    }
+
+    const result = db.prepare(`
+        INSERT INTO Task (user_id, list_id, title, due, priority, tag)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `).run(req.session.userId, req.listId, title, due, priority, tag);
 
     res.status(201).json({
         message: "Task created!",
@@ -214,14 +220,15 @@ app.post("/api/tasks", requireAuth, (req, res) => {
 
 
 // READ TASKS
-app.get("/api/tasks", requireAuth, (req, res) => {
+app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const tasks = db.prepare(`
-        SELECT *
-        FROM Task
-        WHERE user_id = ?
-        AND deleted_at IS NULL
-        ORDER BY due ASC
-    `).all(req.session.userId);
+        SELECT t.*, u.display_name AS added_by
+        FROM Task t
+        JOIN User u ON u.user_id = t.user_id
+        WHERE t.list_id = ?
+        AND t.deleted_at IS NULL
+        ORDER BY t.due ASC
+    `).all(req.listId);
 
     res.json(tasks);
 });
@@ -230,13 +237,23 @@ app.get("/api/tasks", requireAuth, (req, res) => {
 // UPDATE TASK
 app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
-    const { title, due, priority, tag } = req.body;
+
+    const title = asString(req.body.title);
+    const due = req.body.title || null;         // empty string = no due date
+    const { priority, tag } = req.body;
+
+    const problem = validateTask({ title, due, priority, tag });
+
+    if (problem) {
+        return res.status(400).json({error: problem});
+    }
 
     const statement = db.prepare(`
         UPDATE Task
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
-        AND user_id = ?
+        AND deleted_at IS NULL
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `);
 
     const result = statement.run(title, due, priority, tag, id, req.session.userId);
@@ -260,7 +277,7 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at is NULL
     `);
 
@@ -285,7 +302,7 @@ app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `);
 
     const result = statement.run(id, req.session.userId);
@@ -310,7 +327,7 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
         UPDATE Task
         SET is_done = ?
         WHERE task_id = ?
-        AND user_id = ?
+        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at IS NULL
     `);
 
@@ -327,6 +344,8 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
     });
 });
 
+
+
 // blocks requests from people who aren't logged in
 function requireAuth (req, res, next) {
     if (!req.session.userId) {
@@ -335,6 +354,188 @@ function requireAuth (req, res, next) {
 
     next();
 }
+
+// LIST HELPERS
+// creates the list and its owner's membership together, or neither
+const createList = db.transaction((name, owner_id, type = "collab") => {
+    const { lastInsertRowid: list_id } = db
+        .prepare("INSERT INTO List (name, owner_id, type) VALUES (?, ?, ?)")
+        .run(name, owner_id, type);
+    db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)")
+        .run(list_id, owner_id);
+
+    return list_id;
+});
+
+// blocks users who aren't in the list; ownership comes from List.owner_id only
+function requireMember(req, res, next) {
+    const list_id = Number(req.params.listId);
+
+    const list = db.prepare(`
+        SELECT l.owner_id, l.type
+        FROM List l
+        JOIN ListMember lm ON lm.list_id = l.list_id
+        WHERE l.list_id = ? AND lm.user_id = ?
+    `).get(list_id, req.session.userId);
+
+    console.log({
+        list_id,
+        sessionUserId: req.session.userId,
+        found: !!list
+    });
+
+    // 404 instead of 403 so people can't probe which list ids exist
+    if (!list) {
+        return res.status(404).json({error: "List not found."});
+    }
+
+    req.listId = list_id;
+    req.listType = list.type;
+    req.isOwner = list.owner_id === req.session.userId;
+    next();
+}
+
+function requireOwner(req, res, next) {
+     if (!req.isOwner) {
+        return res.status(403).json({error: "Only the list owner can do that."});
+    }
+
+    next();
+}
+
+// LIST ROUTES
+// VIEW LIST
+app.get("/api/lists", requireAuth, (req, res) => {
+    const lists = db.prepare(`
+        SELECT l.list_id, l.name, l.type,
+            CASE WHEN l.owner_id = ? THEN 'owner' ELSE 'editor' END AS role,
+            (SELECT COUNT(*) FROM ListMember WHERE list_id = l.list_id) AS member_count
+        FROM List l
+        JOIN ListMember lm ON lm.list_id = l.list_id
+        WHERE lm.user_id = ?
+        ORDER BY (l.type = 'personal') DESC, l.created_at ASC
+    `).all(req.session.userId, req.session.userId);
+
+    res.json(lists);
+});
+
+// CREATE A NEW COLLAB LIST
+app.post("/api/lists", requireAuth, (req, res) => {
+    const name = asString(req.body.name);
+
+    if (!name || name.length > 50) {
+        return res.status(400).json({error: "List name is required (max 50 characters)"});
+    }
+
+    const list_id = createList(name, req.session.userId, "collab");
+
+    res.status(201).json({
+        message: "List created!",
+        list_id: list_id
+    });
+});
+
+// RENAME LIST
+app.put("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+    const name = asString(req.body.name);
+
+    if (!name || name.length > 50) {
+        return res.status(400).json({error: "List name is required (max 50 characters)"});
+    }
+
+    db.prepare("UPDATE List SET name = ? WHERE list_id = ?").run(name, req.listId);
+
+    res.json({message: "List renamed!"});
+});
+
+// DELETE LIST
+app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+    if (req.listType === "personal") {
+        return res.status(400).json({error: "You can't delete your personal list."});
+    }
+
+    db.transaction(() => {
+        db.prepare("DELETE FROM Task WHERE list_id = ?").run(req.listId);
+        db.prepare("DELETE FROM ListMember WHERE list_id = ?").run(req.listId);
+        db.prepare("DELETE FROM List WHERE list_id = ?").run(req.listId);
+    })();
+
+    res.json({message: "List deleted."});
+});
+
+
+// LIST MEMBER ROUTES
+// GET LIST MEMBERS
+app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => {
+    const members = db.prepare(`
+        SELECT u.user_id, u.username, u.display_name,
+            CASE WHEN l.owner_id = u.user_id THEN 'owner' ELSE 'editor' END AS role
+        FROM ListMember lm
+        JOIN User u ON u.user_id = lm.user_id
+        JOIN List l ON l.list_id = lm.list_id
+        WHERE lm.list_id = ?
+        ORDER BY (l.owner_id = u.user_id) DESC, u.display_name ASC
+    `).all(req.listId);
+
+    res.json(members);  // returns array
+});
+
+// ADD MEMBER BY USERNAME
+app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner, (req, res) => {
+    if (req.listType === "personal") {
+        return res.status(400).json({error: "Personal list can't be shared"});
+    }
+
+    const username = asString(req.body.username);
+
+    if (!username) {
+        return res.status(400).json({error: "Username is required"});
+    }
+
+    const user = db.prepare("SELECT user_id FROM User WHERE username = ?").get(username);
+
+    if (!user) {
+        return res.status(404).json({error: "No user with that username"});
+    }
+
+    try {
+        db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)").run(req.listId, user.user_id);
+    } catch (err) {
+        if (err.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
+            return res.status(409).json({error: "That user is already in this list"});
+        }
+
+        throw err;
+    }
+
+    res.status(201).json({message: "Member added!"});
+});
+
+// owner removes someone or a member themselves leave
+app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, (req, res) => {
+    const target = Number(req.params.userId);
+    const isSelf = target === req.session.userId;
+
+    if (!isSelf && !req.isOwner) {
+        return res.status(403).json({error: "Only the list owner can remove members"});
+    }
+
+    const list = db.prepare("SELECT owner_id FROM List WHERE list_id = ?").get(req.listId);
+
+    if (target === list.owner_id) {
+        return res.status(400).json({error: "The owner can't leave. Delete the list instead."});
+    }
+
+    const result = db.prepare(`
+        DELETE FROM ListMember WHERE list_id = ? AND user_id = ?
+    `).run(req.listId, target)
+
+    if (result.changes === 0) {
+        return res.status(404).json({error: "Member not found"});
+    }
+
+    res.json({message: isSelf ? "You left the list." : "Member removed."});
+});
 
 // TODO: trash routes, delete forever feature
 

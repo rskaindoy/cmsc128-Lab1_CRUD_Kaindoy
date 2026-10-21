@@ -15,7 +15,7 @@ const confirmDeleteButton = document.getElementById("confirm-delete-button");
 
 deleteConfirmation.style.display = "none";
 
-let taskToDelete = null;
+let pendingConfirm = null;      // what to run if user confirms
 
 // for undo notif
 const undoNotif = document.getElementById("undo-notif");
@@ -36,6 +36,296 @@ let currentPriority = "all";
 const sortSelect = document.getElementById("sort-select");
 let currentSort = "created_at";
 
+// for lists
+let lists = [];
+let currentListId = null;
+let currentUserId = null;       // set by nav.js after login
+let activeView = null;          // set by showView() in nav.js
+const personalListNav = document.getElementById("personal-list-nav");
+const sharedListNav = document.getElementById("shared-list-nav");
+const listSelect = document.getElementById("list-select");
+const taskTitle = document.getElementById("task-title");
+const newListButton = document.getElementById("new-list-button");
+const newListForm = document.getElementById("new-list-form");
+const newListName = document.getElementById("new-list-name");
+const listMessage = document.getElementById("list-message");
+
+// for list members
+const shareListButton = document.getElementById("share-list-button"); 
+const membersPanel = document.getElementById("members-panel");
+const memberList = document.getElementById("member-list");
+const addMemberForm = document.getElementById("add-member-form");
+const memberUsername = document.getElementById("member-username");
+const membersMessage = document.getElementById("members-message");
+const leaveListButton = document.getElementById("leave-list-button");
+const deleteListButton = document.getElementById("delete-list-button");
+
+function currentList() {
+    return lists.find((list) => list.list_id === currentListId);
+}
+
+async function loadLists() {
+    const response = await apiFetch("/lists");
+
+    if (!response.ok) {
+        console.error("Failed to load lists.")
+        return;
+    }
+
+    lists = await response.json();
+
+    // default to the first list (personal comes first), also resets after switching accounts
+    if (!currentList()) {
+        currentListId = lists[0]?.list_id ?? null;
+    }
+
+    renderListNav();
+}
+
+function listNavItem(list) {
+    const isActive = activeView === "tasks" && list.list_id === currentListId;
+
+    return `
+        <button class="nav-item list-item" type="button" data-list-id="${list.list_id}" ${isActive ? 'aria-current="page"' : ""}>
+            <span aria-hidden="true">${list.type === "personal" ? "📋" : "👥"}</span>
+            <span class="list-name">${escapeHTML(list.name)}</span>
+            ${ list.type === "collab" ? `<span class="nav-count">${list.member_count}</span>` : ""}
+        </button>
+    `;
+}
+
+function renderListNav() {
+    const personal = lists.filter((list) => list.type === "personal");
+    const shared = lists.filter((list) => list.type === "collab");
+
+    personalListNav.innerHTML = personal.map(listNavItem).join("");
+    sharedListNav.innerHTML = shared.length ? shared.map(listNavItem).join("") : `<p class="nav-empty">No shared lists yet.</p>`;
+
+    // for small-screen picker
+    listSelect.innerHTML = lists.map((list) => {
+        const label = list.type === "personal" ? `${list.name} (Personal)` : list.name;
+
+        return `<option value="${list.list_id}">${escapeHTML(label)}</option>`;
+    }).join("");
+
+    if (currentListId) {
+        listSelect.value = currentListId;
+    }
+
+    const list = currentList();
+    taskTitle.textContent = list ? list.name : "My Tasks";
+    shareListButton.hidden = !list || list.type === "personal";
+}
+
+function selectList(listId) {
+    currentListId = Number(listId);
+    closeMembersPanel();
+
+    if (activeView !== "tasks") {
+        showView("tasks");          // from nav.js; reload lists and tasks
+    } else {
+        renderListNav();
+        loadTasks();
+    }
+}
+
+document.getElementById("nav-list").addEventListener("click", (event) => {
+    const item = event.target.closest(".list-item");
+
+    if (item) {
+        selectList(item.dataset.listId);
+    }
+});
+
+listSelect.addEventListener("change", () => selectList(listSelect.value));
+
+
+// NEW LIST
+newListButton.addEventListener("click", () => {
+    newListButton.hidden = true;
+    newListForm.hidden = false;
+    setMessage(listMessage, "");
+    newListName.focus();
+});
+
+function closeNewListForm() {
+    newListForm.reset();
+    newListForm.hidden = true;
+    newListButton.hidden = false;
+    setMessage(listMessage, "");
+};
+
+document.getElementById("cancel-new-list").addEventListener("click", closeNewListForm);
+
+newListForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    setMessage(listMessage, "");
+
+    const response = await apiFetch("/lists", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name: newListName.value })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        setMessage(listMessage, data.error);        // stays red and inline
+        return;
+    }
+
+    closeNewListForm();
+    selectList(data.list_id);
+});
+
+
+// MEMBERS PANEL
+
+function closeMembersPanel() {
+    membersPanel.hidden = true;
+    addMemberForm.reset();
+    setMessage(membersMessage, "");
+}
+
+async function loadMembers(){
+    const list = currentList();
+
+    if (!list) {
+        return;
+    }
+
+    const response = await apiFetch(`/lists/${currentListId}/members`);
+
+    if (!response.ok) {
+        setMessage(membersMessage, "Couldn't load members. Please try again.");
+        return;
+    }
+
+    const members = await response.json();
+    const isOwner = list.role === "owner";
+
+    memberList.innerHTML = members.map((member) => `
+        <li class="member-item">
+            <span class="member-name">
+                ${escapeHTML(member.display_name)} <small>@${escapeHTML(member.username)}</small>
+            </span>
+            ${ member.role === "owner" ? `<span class="category-badge">Owner</span>` : isOwner 
+                ? `<button class="link-button muted remove-member-button" data-id="${member.user_id}" type="button">Remove</button>`
+                : ""
+            }
+        </li>
+    `).join("");
+
+    addMemberForm.hidden = !isOwner;
+    deleteListButton.hidden = !isOwner;
+    leaveListButton.hidden = isOwner;
+}
+
+shareListButton.addEventListener("click", () => {
+    if (!membersPanel.hidden) {
+        closeMembersPanel();
+        return;
+    }
+
+    setMessage(membersMessage, "");
+    membersPanel.hidden = false;
+    loadMembers();
+});
+
+// ADD A MEMBER
+addMemberForm.addEventListener("submit", async(event) => {
+    event.preventDefault();
+    setMessage(membersMessage, "");
+
+    const response = await apiFetch(`/lists/${currentListId}/members`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ username: memberUsername.value })
+    });
+
+    const data = await response.json()
+
+    if (!response.ok) {
+        setMessage(membersMessage, data.error);
+        return;
+    }
+
+    addMemberForm.reset();
+    setMessage(membersMessage, data.message, "success");
+
+    await loadLists();              // refreshes the member count in the sidebar
+    loadMembers();
+});
+
+// REMOVE A MEMBER (owner only)
+memberList.addEventListener("click", async (event) => {
+    const button = event.target.closest(".remove-member-button");
+
+    if (!button) {
+        return;
+    }
+
+    setMessage(membersMessage, "");
+
+    const response = await apiFetch(`/lists/${currentListId}/members/${button.dataset.id}`, {
+        method: "DELETE"
+    });
+
+    if (!response.ok) {
+        const data = await response.json();
+        setMessage(membersMessage, data.error);
+        return;
+    }
+
+    await loadLists();              // refreshes the member count in the sidebar
+    loadMembers();
+});
+
+// after leaving or deleting, the list is gone for this user, so fall back to the personal list
+async function afterLeavingList() {
+    closeMembersPanel();
+    currentListId = null;
+    await loadLists();              
+    loadTasks();
+}
+
+// LEAVE LIST 
+leaveListButton.addEventListener("click", () => {
+    const list = currentList();
+
+    askConfirm(`Leave "${list.name}"? You'll lose access to its tasks.`, "Leave", async () => {
+        const response = await apiFetch(`/lists/${currentListId}/members/${currentUserId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            setMessage(membersMessage, data.error);
+            return;
+        }
+
+        afterLeavingList();
+    });
+});
+
+// DELETE LIST
+deleteListButton.addEventListener("click", () => {
+    const list = currentList();
+
+    askConfirm(`Delete "${list.name}" and all its tasks for everyone?`, "Delete", async () => {
+        const response = await apiFetch(`/lists/${currentListId}`, {
+            method: "DELETE"
+        });
+
+        if (!response.ok) {
+            const data = await response.json();
+            setMessage(membersMessage, data.error);
+            return;
+        }
+
+        afterLeavingList();
+    });
+});
 
 // MANIPULATE TASK PANEL ---------------------
 
@@ -84,7 +374,7 @@ taskForm.addEventListener("submit", async (event) => {
         });
     } else {
         // create new task
-        response = await apiFetch(`/tasks`, {
+        response = await apiFetch(`/lists/${currentListId}/tasks`, {
             method: "POST",
             headers:{"Content-Type": "application/json"},
             body: JSON.stringify({
@@ -117,7 +407,11 @@ taskForm.addEventListener("submit", async (event) => {
 // READ TASKS ---------------------
 // fetch tasks from database
 async function loadTasks() {
-    const response = await apiFetch(`/tasks`);
+    if (!currentListId) {
+        return;
+    }
+
+    const response = await apiFetch(`/lists/${currentListId}/tasks`);
 
     if (!response.ok) {
         console.error("Failed to load tasks.");
@@ -175,6 +469,11 @@ priorityFilter.addEventListener("change", () => {
 // SORTING TASKS
 function sortTasks(tasks){
     return [...tasks].sort((a, b) => {
+        // put completed tasks at the bottom
+        if (a.is_done !== b.is_done) {
+            return a.is_done ? 1 : -1;
+        }
+
         if (currentSort === "created_at"){
             return new Date(a.created_at) - new Date(b.created_at);
         }
@@ -267,6 +566,11 @@ function renderTasks(tasks) {
             <div class="task-details">
                 <p>Due: ${formatDueDate(task.due)}</p>
                 
+                ${ currentList()?.type === "collab"
+                    ? `<p>Added by ${escapeHTML(task.added_by)}</p>`
+                    : ""
+                }
+
                 ${ task.due && new Date(task.due) < new Date() && !task.is_done
                     ? `<span class="overdue-badge">Overdue</span>`
                     : ""
@@ -317,9 +621,7 @@ function renderTasks(tasks) {
             }
 
             // won't delete yet, will only show the confirmation
-            taskToDelete = taskID;
-            deleteMsg.textContent =`Are you sure you want to delete "${task.title}"?`;
-            deleteConfirmation.style.display = "block";
+            askConfirm(`Are you sure you want to delete "${task.title}"?`, "Delete", () => deleteTask(taskID));
         });
     });
 
@@ -336,23 +638,28 @@ function renderTasks(tasks) {
     });
 }
 
-// DELETE CONFIRMATION ACTIONS ---------------------
+// CONFIRMATION NOTIF (shared by deleting tasks, leaving lists, deleting lists) ---------------------
+function askConfirm(message, confirmLabel, onConfirm) {
+    deleteMsg.textContent = message;
+    confirmDeleteButton.textContent = confirmLabel;
+    pendingConfirm = onConfirm;
+    deleteConfirmation.style.display = "block";
+}
+
 cancelDeleteButton.addEventListener("click", () => {
-    taskToDelete = null;
+    pendingConfirm = null;
     deleteConfirmation.style.display = "none";
 });
 
 confirmDeleteButton.addEventListener("click", async () => {
-    if (!taskToDelete) {
-        return;
-    }
+    const action = pendingConfirm;
 
-    const taskID = taskToDelete;
-
-    taskToDelete = null;
+    pendingConfirm = null;
     deleteConfirmation.style.display = "none";
 
-    await deleteTask(taskID);
+    if (action) {
+        await action();
+    }
 });
 
 // EDIT TASK ---------------------
@@ -458,7 +765,3 @@ async function doneTask(taskID, isDone) {
     // refresh task list
     loadTasks();
 }
-
-
-// INITIAL LOAD ---------------------
-loadTasks();

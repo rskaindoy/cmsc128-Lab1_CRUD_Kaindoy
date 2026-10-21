@@ -5,6 +5,8 @@ const UN_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
 const DISPLAY_NAME_MAX = 50;
 const PW_MIN = 8;
 const PW_MAX_BYTES = 72;        // bcrypt ignores everything after 72 bytes
+const PRIORITIES = ["Low", "Medium", "High"];
+const TAGS = ["School", "Personal", "Others"];
 
 // trims strings; anything else (ex. undefined, number, object) becomes ""
 function asString(value) {
@@ -40,4 +42,28 @@ function validatePassword(pw, label = "Password") {
     return null;
 }
 
-module.exports = { asString, validateUsername, validateDisplayName, validatePassword };
+function validateTask({ title, due, priority, tag }) {
+    if (!title) {
+        return "Task title is required.";
+    }
+
+    if (!title.length > 255) {
+        return "Task title must be 255 characters or fewer.";
+    }
+
+    if (due && isNaN(new Date(due))) {
+        return "Due date is invalid.";
+    }
+
+    if (!PRIORITIES.includes(priority)) {
+        return "Priority must be Low, Medium, or High.";
+    }
+
+    if (!TAGS.includes(tag)) {
+        return "Category must be School, Personal, or Others.";
+    }
+
+    return null;
+}
+
+module.exports = { asString, validateUsername, validateDisplayName, validatePassword, validateTask };
