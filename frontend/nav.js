@@ -35,9 +35,14 @@ function showView(name) {
         loadProfile();
     }
 
-    if (name === "tasks") {
-        loadLists().then(loadTasks);
-    }
+    // the sidebar needs the list in every view, not just Tasks
+    loadLists().then(() => {
+        renderListNav();
+        
+        if (name === "tasks") {
+            loadTasks();
+        }
+    });
 
     window.scrollTo(0,0);
 }
@@ -55,7 +60,7 @@ showAuthenticated = function (user) {
     currentUserId = user.user_id;
     document.body.classList.add("logged-in");
     sidebarGreeting.textContent = `Hello, ${user.display_name}!`;
-    showView("profile");
+    showView("tasks");
 };
 
 showLogin = function () {

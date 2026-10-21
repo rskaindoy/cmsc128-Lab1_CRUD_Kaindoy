@@ -237,7 +237,7 @@ app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 // UPDATE TASK
 app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
-    
+
     const title = asString(req.body.title);
     const due = req.body.title || null;         // empty string = no due date
     const { priority, tag } = req.body;
@@ -381,7 +381,7 @@ function requireMember(req, res, next) {
     }
 
     req.listId = list_id;
-    req.listType = list_type;
+    req.listType = list.type;
     req.isOwner = list.owner_id === req.session.userId;
     next();
 }

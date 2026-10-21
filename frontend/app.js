@@ -40,6 +40,7 @@ let currentSort = "created_at";
 let lists = [];
 let currentListId = null;
 let currentUserId = null;       // set by nav.js after login
+let activeView = null;          // set by showView() in nav.js
 
 function currentList() {
     return lists.find((list) => list.list_id === currentListId);
