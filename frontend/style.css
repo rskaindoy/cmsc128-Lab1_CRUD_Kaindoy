@@ -1199,3 +1199,96 @@ body:not(.logged-in) header {
     color: var(--charcoal);
     cursor: pointer;
 }
+
+/* list header + members panel */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toolbar-button {
+    padding: 10px 14px;
+    border: 1px solid #e5ded2;
+    border-radius: 10px;
+    background-color: white;
+    color: var(--charcoal);
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.toolbar-button:hover { background-color: var(--cream); }
+
+.toolbar-button[hidden] { display: none; }
+
+#members-panel {
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    background-color: white;
+    border: 1px solid #e5ded2;
+    border-radius: 12px;
+}
+
+#members-panel[hidden] { display: none; }
+
+#members-panel h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+#member-list {
+    margin: 0 0 12px;
+    padding: 0;
+    list-style: none;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 1px solid #e5ded2;
+}
+
+.member-item:first-child { border-top: none; }
+
+.member-name { flex: 1; }
+
+.member-item small {
+    color: #777;
+    font-size: 13px;
+}
+
+#add-member-form {
+    display: flex;
+    gap: 8px;
+}
+
+#add-member-form[hidden] { display: none; }
+
+#add-member-form input {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #d8d0c4;
+    border-radius: 8px;
+}
+
+#add-member-form input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
+}
+
+#members-message { margin-bottom: 0; }
+
+.members-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.link-button.danger-text { color: #B3401F; }
+
+.link-button.danger-text:hover { background-color: #f5ddd6; }
