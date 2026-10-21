@@ -1090,6 +1090,16 @@ body:not(.logged-in) header {
 
 .auth-switch .link-button {
     padding: 4px 6px;
+    border: none;
+    background: none;
+    color: var(--green);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.auth-switch .link-button:hover {
+    text-decoration: underline;
 }
 
 .pw-toggle:focus-visible, 
