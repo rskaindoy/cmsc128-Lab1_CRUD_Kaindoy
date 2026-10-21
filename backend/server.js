@@ -455,7 +455,7 @@ app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => 
 });
 
 // ADD MEMBER BY USERNAME
-app.post("/api/lists:listId/members", requireAuth, requireMember, requireOwner, (req, res) => {
+app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner, (req, res) => {
     if (req.listType === "personal") {
         return res.status(400).json({error: "Personal list can't be shared"});
     }
@@ -476,7 +476,7 @@ app.post("/api/lists:listId/members", requireAuth, requireMember, requireOwner, 
         db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)").run(req.listId, user.user_id);
     } catch (err) {
         if (err.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
-            return res.status(404).json({error: "That user is already in this list"});
+            return res.status(409).json({error: "That user is already in this list"});
         }
 
         throw err;
@@ -485,6 +485,31 @@ app.post("/api/lists:listId/members", requireAuth, requireMember, requireOwner, 
     res.status(201).json({message: "Member added!"});
 });
 
+// owner removes someone or a member themselves leave
+app.delete("/api/lists/:listId/members/userId", requireAuth, requireMember, (req, res) => {
+    const target = Number(req.params.userId);
+    const isSelf = target === req.session.userId;
+
+    if (!isSelf || !req.isOwner) {
+        return res.status(403).json({error: "Only the list owner can remove members"});
+    }
+
+    const list = db.prepare("SELECT owner_id FROM List WHERE list_id = ?").get(req.listId);
+
+    if (target === list.owner_id) {
+        return res.status(400).json({error: "The owner can't leace. Delete the list instead."});
+    }
+
+    const result = db.prepare(`
+        DELET FROM ListMember WHERE list_id = ? AND user_id = ?
+    `).run(req.listId, target)
+
+    if (result.changes === 0) {
+        return res.status(404).json({error: "Member not found"});
+    }
+
+    res.json({message: isSelf ? "You left the list." : "Member removed."});
+});
 
 // TODO: trash routes, delete forever feature
 
