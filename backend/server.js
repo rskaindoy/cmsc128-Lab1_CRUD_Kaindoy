@@ -378,6 +378,12 @@ function requireMember(req, res, next) {
         WHERE l.list_id = ? AND lm.user_id = ?
     `).get(list_id, req.session.userId);
 
+    console.log({
+        list_id,
+        sessionUserId: req.session.userId,
+        found: !!list
+    });
+
     // 404 instead of 403 so people can't probe which list ids exist
     if (!list) {
         return res.status(404).json({error: "List not found."});

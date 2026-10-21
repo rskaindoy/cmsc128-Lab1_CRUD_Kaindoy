@@ -469,6 +469,11 @@ priorityFilter.addEventListener("change", () => {
 // SORTING TASKS
 function sortTasks(tasks){
     return [...tasks].sort((a, b) => {
+        // put completed tasks at the bottom
+        if (a.is_done !== b.is_done) {
+            return a.is_done ? 1 : -1;
+        }
+
         if (currentSort === "created_at"){
             return new Date(a.created_at) - new Date(b.created_at);
         }
