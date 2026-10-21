@@ -61,6 +61,109 @@ async function loadLists() {
     }
 }
 
+const personalListNav = document.getElementById("personal-list-nav");
+const sharedListNav = document.getElementById("shared-list-nav");
+const listSelect = document.getElementById("list-select");
+const taskTitle = document.getElementById("task-title");
+const newListButton = document.getElementById("new-list-button");
+const newListForm = document.getElementById("new-list-form");
+const newListName = document.getElementById("new-list-name");
+const listMessage = document.getElementById("list-message");
+
+function listNavItem(list) {
+    const isActive = activeView === "tasks" && list.list_id === currentListId;
+
+    return `
+        <button class="nav-item list-item" type="button" data-list-id="${list.list_id}" ${isActive ? 'aria-current="page"' : ""}>
+            <span aria-hidden="true">${list.type === "personal" ? "📋" : "👥"}</span>
+            <span class="list-name">${escapeHTML(list.name)}</span>
+            ${ list.type === "collab" ? `<span class="nav-count">${list.member_count}</span>` : ""}
+        </button>
+    `;
+}
+
+function renderListNav() {
+    const personal = lists.filter((list) => list.type === "personal");
+    const shared = lists.filter((list) => list.type === "collab");
+
+    personalListNav.innerHTML = personal.map(listNavItem).join("");
+    sharedListNav.innerHTML = shared.length ? shared.map(listNavItem).join("") : `<p class="nav-empty">No shared lists yet.</p>`;
+
+    // for small-screen picker
+    listSelect.innerHTML = lists.map((list) => {
+        const label = list.type === "personal" ? `${list.name} (Personal)` : list.name;
+
+        return `<option value="${list.list_id}">${escapeHTML(label)}</option>`;
+    }).join("");
+
+    if (currentListId) {
+        listSelect.value = currentListId;
+    }
+
+    const list = currentList();
+    taskTitle.textContent = list ? list.name : "My Tasks";
+}
+
+function selectList(listId) {
+    currentListId = Number(listId);
+
+    if (activeView !== "tasks") {
+        showView("tasks");          // from nav.js; reload lists and tasks
+    } else {
+        renderListNav();
+        loadTasks();
+    }
+}
+
+document.getElementById("nav-list").addEventListener("click", (event) => {
+    const item = event.target.closest(".list-item");
+
+    if (item) {
+        selectList(item.dataset.listId);
+    }
+});
+
+listSelect.addEventListener("change", () => selectList(listSelect.value));
+
+
+// NEW LIST
+newListButton.addEventListener("click", () => {
+    newListButton.hidden = true;
+    newListForm.hidden = false;
+    setMessage(listMessage, "");
+    newListName.focus();
+});
+
+function closeNewListForm() {
+    newListForm.reset();
+    newListForm.hidden = true;
+    newListButton.hidden = false;
+    setMessage(listMessage, "");
+};
+
+document.getElementById("cancel-new-list").addEventListener("click", closeNewListForm);
+
+newListForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    setMessage(listMessage, "");
+
+    const response = await apiFetch("/lists", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ name: newListName.value })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        setMessage(listMessage, data.error);        // stays red and inline
+        return;
+    }
+
+    closeNewListForm();
+    selectList(data.list_id);
+});
+
 // MANIPULATE TASK PANEL ---------------------
 
 // open the add-task panel

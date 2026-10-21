@@ -87,11 +87,25 @@
             <img class="sidebar-logo" src="images/logo.png" alt="USAD">
             <p id="sidebar-greeting"></p>
 
+            <!-- TASK LISTS -->
             <div id="nav-list">
-                <button class="nav-item" type="button" data-view="tasks" aria-current="page">
-                    <span aria-hidden="true">📋</span> Tasks 
-                </button>
+                <div id="personal-list-nav"></div>
 
+                <p class="nav-group-title">Shared Lists</p>
+                <div id="shared-list-nav"></div>
+
+                <form id="new-list-form" hidden>
+                    <input type="text" id="new-list-name" maxlength="50" placeholder="List name" aria-label="New list name" required>
+                    <div class="new-list-actions">
+                        <button type="submit" class="save-button">Create</button>
+                        <button type="button" class="cancel-new-list" class="link-button muted">Cancel</button>
+                    </div>
+                </form>
+
+                <button id="new-list-button" class="nav-item add-list" type="button">+ New List</button>
+                <p id="list-message" class="auth-message" role="alert"></p>
+
+                
                 <button class="nav-item" type="button" data-view="profile">
                     <span aria-hidden="true">👤</span> Profile 
                 </button>
@@ -109,9 +123,12 @@
             <!-- TASKS-->
             <section id="task-section" class="view">
                 <div id="task-header">
-                    <h2>My Tasks</h2>
+                    <h2 id="task-title">My Tasks</h2>
                     <button id="add-task-button" type="button">+ Add Task</button>
                 </div>
+
+                <!-- only shown on small screens, where the sidebar becomes a bottom bar -->
+                <select id="list-select" aria-label="Choose a list"></select>
 
                 <div id="task-controls">
                     <!-- FILTERS -->

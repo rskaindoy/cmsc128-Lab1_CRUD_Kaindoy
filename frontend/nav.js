@@ -13,6 +13,8 @@ const views = {
 
 // VIEW SWITCHING
 function showView(name) {
+    activeView = name;
+
     Object.entries(views).forEach(([key, section]) => {
         section.hidden = key !== name;
     });
@@ -26,6 +28,8 @@ function showView(name) {
     });
 
     addTaskPanel.classList.remove("open"); // from app.js
+
+    renderListNav();                        // highlights the active list, or none when on Profile
 
     if (name === "profile") {
         loadProfile();
@@ -58,6 +62,8 @@ showLogin = function () {
     baseShowLogin();
     document.body.classList.remove("logged-in");
     closePasswordForm();
+    lists = [];
+    currentListId = null;
 };
 
 // LOGOUT
