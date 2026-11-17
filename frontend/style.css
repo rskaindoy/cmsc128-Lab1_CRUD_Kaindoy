@@ -6,8 +6,12 @@
 }
 
 :root {
-    --cream: #F7F1E7;
-    --green: #176B57;
+    --bg: #FFFFFF;
+    --surface: #FAF8F5;   
+    --border: #E4E4E7;
+    --text: #18181B;
+    --muted: #52525B;     
+    --accent: #176B57;
     --terracotta: #D8795B;
     --yellow: #E9B949;
     --charcoal: #292824;
@@ -19,7 +23,7 @@ body {
     font-family: "Nunito Sans", sans-serif;
     color: var(--charcoal);
 
-    background-color: var(--cream);
+    background-color: var(--surface);
     background-image:
         linear-gradient(
             rgba(23, 107, 87, 0.035) 1px,
@@ -65,7 +69,7 @@ header p:last-of-type {
     font-weight: 600;
     font-style: italic;
 
-    color: var(--green);
+    color: var(--accent);
 }
 
 /* task section */
@@ -132,7 +136,7 @@ header p:last-of-type {
     border: none;
     border-radius: 10px;
 
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
 
     font-size: 16px;
@@ -159,7 +163,7 @@ header p:last-of-type {
     border-radius: 8px;
 
     background-color: transparent;
-    color: #777;
+    color: var(--muted);
 
     font-size: 24px;
     line-height: 1;
@@ -168,7 +172,7 @@ header p:last-of-type {
 }
 
 #close-task-panel:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
     color: var(--charcoal);
 }
 
@@ -212,7 +216,7 @@ input, select, button {
 #task-form input:focus,
 #task-form select:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
 }
 
@@ -225,7 +229,7 @@ input, select, button {
     border: none;
     border-radius: 10px;
 
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
 
     font-size: 16px;
@@ -287,7 +291,7 @@ input, select, button {
 .task-details p {
     margin: 4px 0;
 
-    color: #777;
+    color:var(--muted);
     font-size: 14px;
 }
 
@@ -314,7 +318,7 @@ input, select, button {
 }
 
 .edit-task-button:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
 }
 
 .delete-task-button:hover {
@@ -328,7 +332,7 @@ input, select, button {
     width: 20px;
     height: 20px;
 
-    border: 2px solid var(--green);
+    border: 2px solid var(--accent);
     border-radius: 6px;
 
     background-color: white;
@@ -338,7 +342,7 @@ input, select, button {
 }
 
 .done-task-checkbox:checked {
-    background-color: var(--green);
+    background-color: var(--accent);
     position: relative;
 }
 
@@ -388,7 +392,7 @@ input, select, button {
     display: inline-block;
     padding: 4px 8px;
     border-radius: 6px;
-    background-color: var(--cream);
+    background-color: var(--surface);
     font-size: 12px;
     font-weight: 600;
 }
@@ -515,7 +519,7 @@ input, select, button {
 }
 
 #undo-notif button:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
 }
 
 /* style filters */
@@ -545,7 +549,7 @@ input, select, button {
 #filter-controls label, #sort-control label {
     font-size: 13px;
     font-weight: 600;
-    color: #777;
+    color: var(--muted);
 }
 
 #task-controls select {
@@ -571,7 +575,7 @@ input, select, button {
 
 #task-controls select:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(23, 107, 87, 0.1);
 }
 
@@ -648,7 +652,7 @@ body:has(#add-task-panel.open) #content {
     margin: 4px 8px 20px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--green);
+    color: var(--accent);
 }
 
 #nav-list {
@@ -674,11 +678,11 @@ body:has(#add-task-panel.open) #content {
 }
 
 .nav-item:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
 }
 
 .nav-item[aria-current="page"] {
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
 }
 
@@ -686,7 +690,7 @@ body:has(#add-task-panel.open) #content {
 .nav-item:focus-visible,
 .link-button:focus-visible,
 .save-button:focus-visible {
-    outline: 2px solid var(--green);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -695,7 +699,7 @@ body:has(#add-task-panel.open) #content {
     min-width: 22px;
     padding: 0 7px;
     border-radius: 11px;
-    background-color: var(--cream);
+    background-color: var(--surface);
     color: var(--charcoal);
     font-size: 12px;
     font-weight: 700;
@@ -730,14 +734,14 @@ body:has(#add-task-panel.open) #content {
 
 .view-hint {
     margin: 4px 0 20px;
-    color: #777;
+    color: var(--muted);
     font-size: 14px;
 }
 
 .empty-state {
     padding: 45px 0;
     text-align: center;
-    color: #777;
+    color:var(--muted);
 }
 
 /* TODO: trash */
@@ -761,7 +765,7 @@ body:has(#add-task-panel.open) #content {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
     font-size: 24px;
     font-weight: 700;
@@ -771,7 +775,7 @@ body:has(#add-task-panel.open) #content {
     margin: 24px 0 8px 4px;
     font-size: 14px;
     font-weight: 700;
-    color: #777;
+    color: var(--muted);
 }
 
 .profile-card {
@@ -796,7 +800,7 @@ body:has(#add-task-panel.open) #content {
 .profile-label {
     width: 110px;
     flex-shrink: 0;
-    color: #777;
+    color: var(--muted);
     font-size: 14px;
 }
 
@@ -818,7 +822,7 @@ body:has(#add-task-panel.open) #content {
 
 .profile-value input:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
 }
 
@@ -826,17 +830,17 @@ body:has(#add-task-panel.open) #content {
     border: none;
     border-radius: 8px;
     background-color: transparent;
-    color: var(--green);
+    color: var(--accent);
     font-weight: 700;
     cursor: pointer;
 }
 
 .link-button:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
 }
 
 .link-button.muted {
-    color: #777;
+    color: var(--muted);
 }
 
 .link-button:disabled {
@@ -848,7 +852,7 @@ body:has(#add-task-panel.open) #content {
 .save-button {
     border: none;
     border-radius: 8px;
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
     font-weight: 700;
     cursor: pointer;
@@ -862,7 +866,7 @@ body:has(#add-task-panel.open) #content {
 }
 
 .profile-message.success {
-    color: var(--green);
+    color: var(--accent);
 }
 
 .profile-message.error {
@@ -976,7 +980,7 @@ body:not(.logged-in) header {
 
 .auth-sub {
     margin: 4px 0 20px;
-    color: #777;
+    color: var(--muted);
     font-size: 14px;
 }
 
@@ -1008,14 +1012,14 @@ body:not(.logged-in) header {
 
 .field input:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
 }
 
 .field-hint {
     margin: 0;
     font-size: 12px;
-    color: #777;
+    color: var(--muted);
 }
 
 /* show/hide pw */
@@ -1036,14 +1040,14 @@ body:not(.logged-in) header {
     border: none;
     border-radius: 6px;
     background-color: transparent;
-    color: var(--green);
+    color: var(--accent);
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
 }
 
 .pw-toggle:hover {
-    background-color: var(--cream);
+    background-color: var(--surface);
 }
 
 .auth-submit {
@@ -1051,7 +1055,7 @@ body:not(.logged-in) header {
     padding: 12px 16px;
     border: none;
     border-radius: 10px;
-    background-color: var(--green);
+    background-color: var(--accent);
     color: white;
     font-size: 16px;
     font-weight: 700;
@@ -1078,21 +1082,21 @@ body:not(.logged-in) header {
 }
 
 .auth-message.success {
-    color: var(--green);
+    color: var(--accent);
 }
 
 .auth-switch {
     margin: 16px 0 0;
     text-align: center;
     font-size: 14px;
-    color: #777;
+    color: var(--muted);
 }
 
 .auth-switch .link-button {
     padding: 4px 6px;
     border: none;
     background: none;
-    color: var(--green);
+    color: var(--accent);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
@@ -1105,7 +1109,7 @@ body:not(.logged-in) header {
 .pw-toggle:focus-visible, 
 .auth-submit:focus-visible, 
 .auth-switch .link-button:focus-visible {
-    outline: 2px solid var(--green);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -1135,7 +1139,7 @@ body:not(.logged-in) header {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: #777;
+    color: var(--muted);
 }
 
 #shared-list-nav {
@@ -1154,11 +1158,11 @@ body:not(.logged-in) header {
 .nav-empty {
     margin: 4px 12px;
     font-size: 13px;
-    color: #777;
+    color: var(--muted);
 }
 
 .nav-item.add-list {
-    color: var(--green);
+    color: var(--accent);
 }
 
 .nav-item.add-list[hidden] { display: none; }
@@ -1180,7 +1184,7 @@ body:not(.logged-in) header {
 
 #new-list-name:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
 }
 
@@ -1228,7 +1232,7 @@ body:not(.logged-in) header {
     cursor: pointer;
 }
 
-.toolbar-button:hover { background-color: var(--cream); }
+.toolbar-button:hover { background-color: var(--surface); }
 
 .toolbar-button[hidden] { display: none; }
 
@@ -1266,7 +1270,7 @@ body:not(.logged-in) header {
 .member-name { flex: 1; }
 
 .member-item small {
-    color: #777;
+    color: var(--muted);
     font-size: 13px;
 }
 
@@ -1286,7 +1290,7 @@ body:not(.logged-in) header {
 
 #add-member-form input:focus {
     outline: none;
-    border-color: var(--green);
+    border-color: var(--accent);
     box-shadow: 0 0 0 2px rgba(23, 107, 87, 0.12);
 }
 
