@@ -33,6 +33,10 @@
     --err-bg: #FBEAE6;
     --err-border: #F0C4BD;
     --danger: #9F2B2B;
+    --note-text: #7C4A0E;
+    --note-bg: #FFF4DC;
+    --note-border: #F1D9A3;
+    --note-accent: #B9780F;
 
     /* layout */
     --line: 44px;              /* height of one ruled line = one task row */
@@ -142,9 +146,9 @@ body:not(.logged-in) header {
 }
 
 .auth-message.error {
-    background: var(--err-bg);
-    border: 1px solid var(--err-border);
-    color: var(--err-text);
+    background: var(--note-bg);
+    border: 1px solid var(--note-border);
+    color: var(--note-text);
 }
 
 .auth-message.success {
@@ -164,7 +168,7 @@ body:not(.logged-in) header {
 }
 
 .auth-message.error::before {
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23B93A32' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 7.5v5.5M12 16.5v.01'/></svg>");
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237C4A0E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 11v5M12 7.5v.01'/></svg>");
 }
 
 .auth-message.success::before {
@@ -214,6 +218,36 @@ body:not(.logged-in) header {
     margin: 0;
     font-size: 13px;
     color: var(--muted);
+}
+
+.field-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--note-text);
+}
+
+.field-error::before {
+    content: "";
+    flex: 0 0 16px;
+    height: 16px;
+    margin-top: 2px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237C4A0E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 11v5M12 7.5v.01'/></svg>") center / contain no-repeat;
+}
+
+.field:has(.field-error) .field-hint { display: none; }   /* the note replaces the hint */
+
+input[aria-invalid="true"],
+select[aria-invalid="true"] {
+    border-color: var(--note-accent) !important;
+    background-color: #FFFCF3;
+}
+
+input[aria-invalid="true"]:focus {
+    box-shadow: 0 0 0 3px rgba(185, 120, 15, 0.18) !important;
 }
 
 .inline-field { display: flex; gap: 8px; }
