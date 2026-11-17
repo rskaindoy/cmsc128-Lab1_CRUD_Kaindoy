@@ -6,7 +6,6 @@
     <title>USAD</title>
 
     <link href="style.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- SVG icon sprite: use with <svg class="icon"><use href="#i-name"/></svg> -->
@@ -32,7 +31,7 @@
     </header>
 
     <section id="auth-section">
-        
+
         <!-- LOGIN -->
         <div id="login-form-container" class="auth-card">
             <h2>Welcome back!</h2>
@@ -52,7 +51,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="auth-submit">Log In</button>
+                <button type="submit" class="auth-submit">Log in</button>
             </form>
 
             <p id="login-message" class="auth-message" role="alert"></p>
@@ -68,13 +67,13 @@
                     <label for="reg-username">Username</label>
                     <input type="text" id="reg-username" autocomplete="username"
                     minlength="3" maxlength="20" pattern="[A-Za-z0-9_]+" title="Letters, numbers, and underscores only." required>
-                    <p class="field-hint">Must be unique, 3-20 characters, and only contains letters, numbers, and/or underscores.</p>
+                    <p class="field-hint">3-20 characters: letters, numbers, or underscores. It has to be unique.</p>
                 </div>
 
                 <div class="field">
-                    <label for="reg-display-name">Display Name</label>
+                    <label for="reg-display-name">Display name</label>
                     <input type="text" id="reg-display-name" autocomplete="nickname" maxlength="50" required>
-                    <p class="field-hint">This is the name we will call you with.</p>
+                    <p class="field-hint">This is the name we'll call you.</p>
                 </div>
 
                 <div class="field">
@@ -86,11 +85,11 @@
                     <p class="field-hint">At least 8 characters.</p>
                 </div>
 
-                <button type="submit" class="auth-submit">Create Account</button>
+                <button type="submit" class="auth-submit">Create account</button>
             </form>
 
             <p id="reg-message" class="auth-message" role="alert"></p>
-            
+
             <p class="auth-switch">Already have an account? <button id="show-login-button" class="link-button" type="button">Log in</button></p>
         </div>
     </section>
@@ -105,7 +104,7 @@
             <div id="nav-list">
                 <div id="personal-list-nav"></div>
 
-                <p class="nav-group-title">Shared Lists</p>
+                <p class="nav-group-title">Shared lists</p>
                 <div id="shared-list-nav"></div>
 
                 <form id="new-list-form" hidden>
@@ -116,31 +115,38 @@
                     </div>
                 </form>
 
-                <button id="new-list-button" class="nav-item add-list" type="button">+ New List</button>
+                <button id="new-list-button" class="nav-item add-list" type="button">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg> New list
+                </button>
                 <p id="list-message" class="auth-message" role="alert"></p>
 
-
                 <button class="nav-item" type="button" data-view="profile">
-                    <svg class="icon" aria-hidden="true"><use href="#i-user"/></svg> Profile 
+                    <svg class="icon" aria-hidden="true"><use href="#i-user"/></svg> Profile
                 </button>
 
                 <!-- TODO: TRASH -->
             </div>
 
-            <button id="logout-button" class="nav-item danger" type="button">
-                <svg class="icon" aria-hidden="true"><use href="#i-log-out"/></svg> Log out 
+            <button id="logout-button" class="nav-item" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-log-out"/></svg> Log out
             </button>
         </nav>
 
         <div id="content">
-            
+
             <!-- TASKS-->
             <section id="task-section" class="view">
                 <div id="task-header">
-                    <h2 id="task-title">My Tasks</h2>
+                    <div class="title-block">
+                        <h2 id="task-title" class="view-title">My Tasks</h2>
+                        <p id="task-summary" class="task-summary" aria-live="polite"></p>
+                    </div>
 
                     <div class="header-actions">
-                        <button id="share-list-button" class="toolbar-button" type="button" hidden>👥 Members</button>
+                        <button id="share-list-button" class="members-button" type="button" hidden>
+                            <span id="avatar-stack" class="avatar-stack" aria-hidden="true"></span>
+                            <span>Members</span>
+                        </button>
                         <button id="add-task-button" class="primary-button" type="button">
                             <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg> Add task
                         </button>
@@ -150,67 +156,55 @@
                 <!-- only shown on small screens, where the sidebar becomes a bottom bar -->
                 <select id="list-select" aria-label="Choose a list"></select>
 
-                <section id="members-panel" hidden>
-                    <h3>Members</h3>
-                    <ul id="member-list"></ul>
-
-                    <form id="add-member-form" hidden>
-                        <input type="text" id="member-username" placeholder="Username to add" aria-label="Username to add" autocomplete="off" required>
-                        <button type="submit" class="save-button">Add</button>
-                    </form>
-
-                    <p id="members-message" class="auth-message" role="alert"></p>
-
-                    <div class="members-actions">
-                        <button id="leave-list-button" class="link-button danger-text" type="button" hidden>Leave List</button>
-                        <button id="delete-list-button" class="link-button danger-text" type="button" hidden>Delete List</button>
-                    </div>
-                </section>
-
+                <!-- FILTERS (sorting lives in the column headers) -->
                 <div id="task-controls">
-                    <!-- FILTERS -->
-                    <div id="filter-controls">
-                        <span class="controls-label">Filter by:</span>
+                    <div id="status-filter" class="segmented" role="group" aria-label="Show tasks">
+                        <button type="button" data-status="all" aria-pressed="true">All</button>
+                        <button type="button" data-status="active" aria-pressed="false">Active</button>
+                        <button type="button" data-status="done" aria-pressed="false">Done</button>
+                    </div>
 
-                        <label for="status-filter">Status:</label>
-                        <select id="status-filter">
-                            <option value="all">ALL</option>
-                            <option value="active">Active</option>
-                            <option value="done">Completed</option>
-                        </select>
-                        
-                        <label for="category-filter">Category:</label>
+                    <label class="select-wrap">Category
                         <select id="category-filter">
-                            <option value="all">ALL</option>
+                            <option value="all">All</option>
                             <option value="School">School</option>
                             <option value="Personal">Personal</option>
                             <option value="Others">Others</option>
                         </select>
+                    </label>
 
-                        <label for="priority-filter">Priority:</label>
+                    <label class="select-wrap">Priority
                         <select id="priority-filter">
-                            <option value="all">ALL</option>
-                            <option value="Low">Low</option>
-                            <option value="Medium">Medium</option>
+                            <option value="all">All</option>
                             <option value="High">High</option>
-                        </select>    
-                    </div>
-
-                    <!-- SORTING -->
-                    <div id="sort-control">
-                        <span class="controls-label">Sort by:</span>
-                        <select id="sort-select">
-                            <option value="created_at">Date Added</option>
-                            <option value="due">Due Date</option>
-                            <option value="priority">Priority</option>
-                            <option value="tag">Tag</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
                         </select>
-                    </div>
+                    </label>
                 </div>
 
+                <!-- QUICK ADD: type + Enter (press N anywhere to jump here) -->
+                <form id="quick-add" class="quick-add" autocomplete="off">
+                    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+                    <input type="text" id="quick-add-input" maxlength="200" placeholder="Write a task and press Enter" aria-label="New task title">
+                </form>
+                <p id="quick-add-message" class="auth-message" role="alert"></p>
 
-                <div id="task-list">
-                    <!-- JS will generate the tasks here -->
+                <!-- TASK SHEET -->
+                <div id="task-sheet" class="sheet" role="table" aria-label="Tasks">
+                    <div class="sheet-head" role="row">
+                        <span role="columnheader"><span class="visually-hidden">Done</span></span>
+                        <span role="columnheader" class="col-task">Task</span>
+                        <span role="columnheader"><button type="button" class="sort-button" data-sort="due">Due <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></button></span>
+                        <span role="columnheader" class="col-cat"><button type="button" class="sort-button" data-sort="tag">Category <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></button></span>
+                        <span role="columnheader" class="col-prio"><button type="button" class="sort-button" data-sort="priority">Priority <svg class="icon" aria-hidden="true"><use href="#i-chevron-down"/></svg></button></span>
+                        <span role="columnheader" class="col-by">Added by</span>
+                        <span role="columnheader"><span class="visually-hidden">Actions</span></span>
+                    </div>
+
+                    <div id="task-list" role="rowgroup">
+                        <!-- JS will generate the tasks here -->
+                    </div>
                 </div>
             </section>
 
@@ -226,7 +220,7 @@
                         <p class="view-hint">Member since <span id="profile-created">-</span></p>
                     </div>
                 </div>
-                
+
                 <h3 class="group-title">Account</h3>
                 <div class="profile-card">
                     <div class="profile-item">
@@ -235,7 +229,7 @@
                         <button id="edit-username-button" class="link-button" type="button">Edit</button>
                     </div>
                     <div class="profile-item">
-                        <span class="profile-label">Display Name</span>
+                        <span class="profile-label">Display name</span>
                         <span class="profile-value" id="profile-display-name">-</span>
                         <button id="edit-display-name-button" class="link-button" type="button">Edit</button>
                     </div>
@@ -284,79 +278,100 @@
                     </form>
                 </div>
 
-                <p id="profile-message" role="status" aria-live="polite"></p>
+                <p id="profile-message" class="auth-message" role="status" aria-live="polite"></p>
             </section>
         </div>
-        
-        <aside id="add-task-panel">
-            <h2 id="task-panel-title">Add a Task</h2>
 
-            <button id="close-task-panel" type="button">
-                <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
-            </button>
-            
-            <form id="task-form">
-                <!-- form fields -->
-                <div>
-                    <label for="title">Task</label>
-                    <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        placeholder="What do you need to do?"
-                        required
-                    >   
+        <!-- ONE slide-in panel for everything secondary: task form + members -->
+        <div id="panel-scrim" class="panel-scrim"></div>
+
+        <aside id="side-panel" aria-labelledby="panel-title" inert>
+            <div class="panel-head">
+                <h2 id="panel-title">Add a task</h2>
+                <button id="close-panel" class="icon-button" type="button" aria-label="Close panel">
+                    <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+                </button>
+            </div>
+
+            <!-- TASK FORM -->
+            <div id="task-panel-body" class="panel-body">
+                <form id="task-form">
+                    <div class="field">
+                        <label for="title">Task</label>
+                        <input type="text" id="title" name="title" placeholder="What do you need to do?" maxlength="200" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="due-display">Due date and time</label>
+                        <input type="datetime-local" id="due" name="due" placeholder="No due date">
+                    </div>
+
+                    <div class="field">
+                        <label for="prio">Priority</label>
+                        <select id="prio" name="prio">
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="tag">Category</label>
+                        <select id="tag" name="tag">
+                            <option value="School">School</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+
+                    <p id="task-form-message" class="auth-message" role="alert"></p>
+
+                    <button id="task-submit-button" class="auth-submit" type="submit">Add task</button>
+                </form>
+            </div>
+
+            <!-- MEMBERS -->
+            <div id="members-panel" class="panel-body" hidden>
+                <ul id="member-list"></ul>
+
+                <form id="add-member-form" hidden>
+                    <div class="field">
+                        <label for="member-username">Add someone by username</label>
+                        <div class="inline-field">
+                            <input type="text" id="member-username" placeholder="e.g. victor_" autocomplete="off" required>
+                            <button type="submit" class="save-button">Add</button>
+                        </div>
+                    </div>
+                </form>
+
+                <p id="members-message" class="auth-message" role="alert"></p>
+
+                <div class="members-actions">
+                    <button id="leave-list-button" class="link-button danger-text" type="button" hidden>Leave list</button>
+                    <button id="delete-list-button" class="link-button danger-text" type="button" hidden>Delete list</button>
                 </div>
-
-                <div>
-                    <label for="due">Due date and time</label>
-                    <input
-                        type="datetime-local"
-                        id="due"
-                        name="due"
-                    >   
-                </div>
-
-                <div>
-                    <label for="prio">Priority</label>
-                    <select id="prio" name="prio">
-                        <option value="Low">Low</option>
-                        <option value="Medium" selected>Medium</option>
-                        <option value="High">High</option>
-                    </select> 
-                </div>
-
-                <div>
-                    <label for="tag">Category</label>
-                    <select id="tag" name="tag">
-                        <option value="School">School</option>
-                        <option value="Personal">Personal</option>
-                        <option value="Others">Others</option>
-                    </select> 
-                </div>
-
-                <button id="task-submit-button" type="submit">Add Task</button>
-            </form>
+            </div>
         </aside>
     </main>
 
-    <!-- delete confirmation notif -->
-    <div id="delete-confirmation" class="notification">
+    <!-- confirmation (only for bigger things: leaving or deleting a list) -->
+    <dialog id="delete-confirmation" class="confirm-dialog">
         <p id="delete-message"></p>
 
         <div class="confirmation-actions">
-            <button id="cancel-delete-button" type="button">Cancel</button>
+            <button id="cancel-delete-button" type="button" autofocus>Cancel</button>
             <button id="confirm-delete-button" type="button">Delete</button>
         </div>
-    </div>
+    </dialog>
 
-    <!-- undo notif -->
-    <div id="undo-notif">
-        <span>Task deleted. Want to undo?</span>
-        <button id="undo-button" type="button">Undo</button>
+    <!-- toast: success messages and Undo -->
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+        <span id="toast-text"></span>
+        <button id="toast-action" type="button" hidden></button>
     </div>
 
     <script src="auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="app.js"></script>
     <script src="nav.js"></script>
 </body>
