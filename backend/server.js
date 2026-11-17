@@ -269,53 +269,61 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
     });
 });
 
-// DELETE TASK
+// DELETE TASK (only the person who added it)
 app.delete("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
-    const statement = db.prepare(`
+    const task = db.prepare(`
+        SELECT t.user_id
+        FROM Task t
+        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
+        WHERE t.task_id = ? AND t.deleted_at IS NULL
+    `).get(req.session.userId, id);
+
+    if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    if (task.user_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task can delete it." });
+    }
+
+    db.prepare(`
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at is NULL
-    `);
+    `).run(id);
 
-    const result = statement.run(id, req.session.userId);
-
-    if (result.changes === 0) {
-        return res.status(404).json({
-            error: "Task not found"
-        });
-    }
-
-    res.json({
-        message: "Task deleted!"
-    });
+    res.json({ message: "Task deleted!" });
 });
 
 // RESTORE DELETED TASK
 app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
     const { id } = req.params;
 
+    const task = db.prepare(`
+        SELECT t.user_id
+        FROM Task t
+        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
+        WHERE t.task_id = ?
+    `).get(req.session.userId, id);
+
+    if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    if (task.user_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task can restore it." });
+    }
+
     const statement = db.prepare(`
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
-    `);
+    `).run(id);
 
-    const result = statement.run(id, req.session.userId);
-
-    if (result.changes === 0) {
-        return res.status(404).json({
-            error: "Task not found"
-        });
-    }
-
-    res.json({
-        message: "Task restored!"
-    });
+    res.json({ message: "Task restored!" });
 });
 
 // CHECK / UNCHECK TASKS
