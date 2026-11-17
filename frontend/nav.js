@@ -27,7 +27,9 @@ function showView(name) {
         }
     });
 
-    addTaskPanel.classList.remove("open"); // from app.js
+    closeSidePanel({ restoreFocus: false });
+
+    // addTaskPanel.classList.remove("open"); // from app.js
 
     renderListNav();                        // highlights the active list, or none when on Profile
 
@@ -86,7 +88,8 @@ logoutButton.addEventListener("click", async() => {
         loginMessage.textContent = "";
         showLogin();
     } catch (error) {
-        alert("Couldn't log out. Please try again.");
+        showToast("We couldn't log you out. Check your connection and try again.");
+        // alert("Couldn't log out. Please try again.");
     }
 });
 
