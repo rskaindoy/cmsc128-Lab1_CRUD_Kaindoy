@@ -260,7 +260,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
@@ -285,7 +285,7 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
@@ -309,7 +309,7 @@ app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
@@ -335,7 +335,7 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
