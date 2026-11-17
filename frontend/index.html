@@ -7,6 +7,7 @@
 
     <link href="style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=Fraunces:opsz,wght,SOFT@9..144,400..700,0..100&family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" rel="stylesheet">
 </head>
 <body>
     <!-- SVG icon sprite: use with <svg class="icon"><use href="#i-name"/></svg> -->
@@ -304,7 +305,13 @@
 
                     <div class="field">
                         <label for="due-display">Due date and time</label>
-                        <input type="datetime-local" id="due" name="due" placeholder="No due date">
+                        <div class="quick-dates" role="group" aria-label="Quick due dates">
+                            <button type="button" data-quick="today">Today</button>
+                            <button type="button" data-quick="tomorrow">Tomorrow</button>
+                            <button type="button" data-quick="nextweek">Next week</button>
+                            <button type="button" data-quick="none">No date</button>
+                        </div>
+                        <input type="text" id="due" name="due" placeholder="No due date">
                     </div>
 
                     <div class="field">

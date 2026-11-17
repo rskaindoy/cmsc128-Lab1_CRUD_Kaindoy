@@ -76,7 +76,38 @@ const leaveListButton = document.getElementById("leave-list-button");
 const deleteListButton = document.getElementById("delete-list-button");
 let membersCache = { listId: null, members: [] };
 
+// date
+const datePicker = flatpickr(document.getElementById("due"), {
+    enableTime: true,
+    dateFormat: "Y-m-d\\TH:i",      // value sent to the server
+    altInput: true,                 // what the user sees:
+    altFormat: "D, M j · h:i K",
+    minuteIncrement: 5,
+    disableMobile: true
+});
+
 // ---------- small helpers ----------
+datePicker.altInput.id = "due-display";
+
+function setDue(value) {
+    value ? datePicker.setDate(value, false) : datePicker.clear();
+}
+
+// quick picks default to 11:59 PM so "Today" isn't overdue instantly
+document.querySelector(".quick-dates").addEventListener("click", (event) => {
+    const kind = event.target.closest("[data-quick]")?.dataset.quick;
+
+    if (!kind) return;
+    if (kind === "none") return datePicker.clear();
+
+    const date = new Date();
+    date.setHours(23, 59, 0, 0);
+    if (kind === "tomorrow") date.setDate(date.getDate() + 1);
+    if (kind === "nextweek") date.setDate(date.getDate() + 7);
+
+    datePicker.setDate(date, false);
+});
+
 function icon(name) {
     return `<svg class="icon" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 }
@@ -114,6 +145,34 @@ function formatDueShort(due) {
     const time = date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }).replace(":00", "");
 
     return `${day}, ${time}`;
+}
+
+
+// <input type="datetime-local"> only accepts "YYYY-MM-DDTHH:mm" (local time).
+// If the server returns anything else ("2026-10-26 12:00:00", "...Z", "...:00.000Z"),
+// the input silently stays blank and the edit sends an empty date.
+function toInputValue(due) {
+    if (!due) {
+        return "";
+    }
+
+    const date = new Date(due);
+
+    if (isNaN(date)) {
+        return "";
+    }
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+// setLoading() remembers the button's first label forever, so set it whenever the label changes
+function setSubmitLabel(text) {
+    const button = document.getElementById("task-submit-button");
+
+    button.textContent = text;
+    button.dataset.label = text;
 }
 
 function currentList() {
@@ -180,6 +239,7 @@ function closeSidePanel({ restoreFocus = true } = {}) {
     document.body.classList.remove("panel-open");
 
     taskForm.reset();
+    datePicker.clear();
     delete taskForm.dataset.editingID;
     setMessage(taskFormMessage, "");
     addMemberForm.reset();
@@ -196,6 +256,8 @@ closePanelButton.addEventListener("click", () => closeSidePanel());
 panelScrim.addEventListener("click", () => closeSidePanel());
 
 document.addEventListener("keydown", (event) => {
+    if (document.querySelector(".flatpickr-calendar.open")) return;     // let Esc close the calendar first
+    
     if (event.key === "Escape" && sidePanel.classList.contains("open") && !deleteConfirmation.open) {
         closeSidePanel();
     }
@@ -555,11 +617,12 @@ confirmDeleteButton.addEventListener("click", async () => {
 // ---------- add / edit a task (side panel) ----------
 addTaskButton.addEventListener("click", () => {
     taskForm.reset();
+    datePicker.clear();
     delete taskForm.dataset.editingID;
     setMessage(taskFormMessage, "");
 
     panelTitle.textContent = "Add a task";
-    document.getElementById("task-submit-button").textContent = "Add task";
+    setSubmitLabel("Add task")
 
     openPanel("task");
 });
@@ -573,10 +636,10 @@ function openEditTaskPanel(taskID) {
 
     setMessage(taskFormMessage, "");
     panelTitle.textContent = "Edit task";
-    document.getElementById("task-submit-button").textContent = "Save changes";
+    setSubmitLabel("Save changes");
 
     document.getElementById("title").value = task.title;
-    document.getElementById("due").value = task.due || "";
+    setDue(toInputValue(task.due));
     document.getElementById("prio").value = task.priority || "Medium";
     document.getElementById("tag").value = task.tag || "Others";
 
@@ -606,6 +669,7 @@ taskForm.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
             const data = await response.json().catch(() => ({}));
+            console.error("Save task failed:", editingID ? "PUT" : "POST", response.status, data, JSON.parse(body));
             throw new Error(data.error || "We couldn't save this task. Check the fields and try again.");
         }
 
