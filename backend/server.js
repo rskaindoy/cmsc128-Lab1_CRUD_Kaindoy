@@ -239,7 +239,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
     const title = asString(req.body.title);
-    const due = req.body.title || null;         // empty string = no due date
+    const due = req.body.due || null;         // empty string = no due date
     const { priority, tag } = req.body;
 
     const problem = validateTask({ title, due, priority, tag });
