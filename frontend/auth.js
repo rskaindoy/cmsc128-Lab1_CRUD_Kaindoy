@@ -175,6 +175,7 @@ showLoginButton.addEventListener("click", () => {
 // LOGIN
 loginForm.addEventListener("submit", async(event) => {
     event.preventDefault();
+    if (!validateForm(loginForm)) return;   
 
     const username = document.getElementById("login-username").value;
     const pw = document.getElementById("login-pw").value;
@@ -211,6 +212,7 @@ loginForm.addEventListener("submit", async(event) => {
 // REGISTER
 regForm.addEventListener("submit", async(event) => {
     event.preventDefault();
+    if (!validateForm(regForm)) return;  
 
     const username = document.getElementById("reg-username").value;
     const display_name = document.getElementById("reg-display-name").value;

@@ -39,7 +39,7 @@
             <h2>Welcome back!</h2>
             <p class="auth-sub">Log in to see your tasks.</p>
 
-            <form id="login-form">
+            <form id="login-form" novalidate>
                 <div class="field">
                     <label for="login-username">Username</label>
                     <input type="text" id="login-username" autocomplete="username" required>
@@ -64,7 +64,7 @@
         <div id="reg-form-container" class="auth-card" hidden>
             <h2>Create your USAD account</h2>
 
-            <form id="reg-form">
+            <form id="reg-form" novalidate>
                 <div class="field">
                     <label for="reg-username">Username</label>
                     <input type="text" id="reg-username" autocomplete="username"
@@ -245,7 +245,7 @@
                         <button id="change-pw-button" class="link-button" type="button">Change password</button>
                     </div>
 
-                    <form id="change-pw-form" class="pw-form" hidden>
+                    <form id="change-pw-form" class="pw-form" novalidate hidden>
                         <div class="field">
                             <label for="current-pw">Current password</label>
                             <div class="pw-wrap">
@@ -297,7 +297,7 @@
 
             <!-- TASK FORM -->
             <div id="task-panel-body" class="panel-body">
-                <form id="task-form">
+                <form id="task-form" novalidate>
                     <div class="field">
                         <label for="title">Task</label>
                         <input type="text" id="title" name="title" placeholder="What do you need to do?" maxlength="200" required>
@@ -342,7 +342,7 @@
             <div id="members-panel" class="panel-body" hidden>
                 <ul id="member-list"></ul>
 
-                <form id="add-member-form" hidden>
+                <form id="add-member-form" novalidate hidden>
                     <div class="field">
                         <label for="member-username">Add someone by username</label>
                         <div class="inline-field">

@@ -244,6 +244,8 @@ function closeSidePanel({ restoreFocus = true } = {}) {
     setMessage(taskFormMessage, "");
     addMemberForm.reset();
     setMessage(membersMessage, "");
+    clearFieldErrors(taskForm);                
+    clearFieldErrors(addMemberForm);           
 
     if (restoreFocus && panelOpener && document.contains(panelOpener)) {
         panelOpener.focus();
@@ -363,6 +365,7 @@ newListButton.addEventListener("click", () => {
 
 function closeNewListForm() {
     newListForm.reset();
+    clearFieldErrors(newListForm); 
     newListForm.hidden = true;
     newListButton.hidden = false;
     setMessage(listMessage, "");
@@ -372,6 +375,8 @@ document.getElementById("cancel-new-list").addEventListener("click", closeNewLis
 
 newListForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!validateForm(newListForm)) return; 
+
     setMessage(listMessage, "");
 
     const name = newListName.value.trim();
@@ -492,6 +497,8 @@ shareListButton.addEventListener("click", () => {
 // ADD A MEMBER
 addMemberForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!validateForm(addMemberForm)) return;
+
     setMessage(membersMessage, "");
 
     try {
@@ -649,6 +656,8 @@ function openEditTaskPanel(taskID) {
 
 taskForm.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (!validateForm(taskForm)) return;
+
     setMessage(taskFormMessage, "");
 
     const body = JSON.stringify({
