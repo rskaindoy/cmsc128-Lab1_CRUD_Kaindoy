@@ -9,6 +9,20 @@
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- SVG icon sprite: use with <svg class="icon"><use href="#i-name"/></svg> -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+        <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/></symbol>
+        <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M18 14.8c2 .7 3.5 2.4 3.5 5.2"/></symbol>
+        <symbol id="i-notebook" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v18"/><path d="M12.5 8h3M12.5 12h3"/></symbol>
+        <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4 3.4-6.5 7.5-6.5s7.5 2.5 7.5 6.5"/></symbol>
+        <symbol id="i-log-out" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="M15 8l4 4-4 4M19 12H9"/></symbol>
+        <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+        <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    </svg>
+
     <!-- shown on the login/register screen only-->
     <header>
         <img src="images/logo.png" alt="USAD logo">
@@ -107,14 +121,14 @@
 
 
                 <button class="nav-item" type="button" data-view="profile">
-                    <span aria-hidden="true">👤</span> Profile 
+                    <svg class="icon" aria-hidden="true"><use href="#i-user"/></svg> Profile 
                 </button>
 
                 <!-- TODO: TRASH -->
             </div>
 
             <button id="logout-button" class="nav-item danger" type="button">
-                <span aria-hidden="true">👋🏼</span> Log out 
+                <svg class="icon" aria-hidden="true"><use href="#i-log-out"/></svg> Log out 
             </button>
         </nav>
 
@@ -127,7 +141,9 @@
 
                     <div class="header-actions">
                         <button id="share-list-button" class="toolbar-button" type="button" hidden>👥 Members</button>
-                        <button id="add-task-button" type="button">+ Add Task</button>
+                        <button id="add-task-button" class="primary-button" type="button">
+                            <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg> Add task
+                        </button>
                     </div>
                 </div>
 
@@ -275,7 +291,9 @@
         <aside id="add-task-panel">
             <h2 id="task-panel-title">Add a Task</h2>
 
-            <button id="close-task-panel" type="button">X</button>
+            <button id="close-task-panel" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+            </button>
             
             <form id="task-form">
                 <!-- form fields -->
