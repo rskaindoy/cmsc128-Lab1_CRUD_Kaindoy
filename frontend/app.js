@@ -893,7 +893,7 @@ function taskRow(task) {
 
             ${due}
 
-            <span class="cell cell-cat" role="cell">${escapeHTML(task.tag || "")}</span>
+            <span class="cell cell-cat cat-${escapeHTML((task.tag || "").toLowerCase())}" role="cell">${escapeHTML(task.tag || "")}</span>
             <span class="cell cell-prio" role="cell">${priority}</span>
             ${ shared ? `<span class="cell cell-by" role="cell">${escapeHTML(task.added_by)}</span>` : "" }
 
