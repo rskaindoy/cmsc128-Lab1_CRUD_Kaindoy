@@ -69,6 +69,76 @@ async function apiFetch(path, options = {}) {
     return response;
 }
 
+// FIELD VALIDATION (replaces the browser's pop-ups)
+function friendlyValidity(input) {
+    const label = (input.closest(".field")?.querySelector("label")?.textContent || "this field").trim().toLowerCase();
+    const v = input.validity;
+
+    if (v.valueMissing) return input.dataset.missing || `Enter your ${label}.`;
+
+    if (input.minLength > 0 && input.value.length < input.minLength) {
+        return `Add ${input.minLength - input.value.length} more character${input.minLength - input.value.length === 1 ? "" : "s"} (at least ${input.minLength} needed).`;
+    }
+
+    if (v.patternMismatch) return input.title || "Check the format and try again.";
+    if (v.tooLong) return `Keep this under ${input.maxLength} characters.`;
+    if (!v.valid) return input.validationMessage;
+
+    return "";
+}
+
+function setFieldError(input, message) {
+    const anchor = input.closest(".pw-wrap, .inline-field") || input;
+    let note = anchor.parentElement.querySelector(":scope > .field-error");
+
+    if (!message) {
+        note?.remove();
+        input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
+        return;
+    }
+
+    if (!note) {
+        note = document.createElement("p");
+        note.className = "field-error";
+        note.id = `err-${input.id}`;
+        note.setAttribute("role", "status");
+        anchor.after(note);
+    }
+
+    note.textContent = message;
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", note.id);
+}
+
+function clearFieldErrors(form) {
+    form.querySelectorAll("input, select").forEach((input) => setFieldError(input, ""));
+}
+
+// returns true if everything is fine; otherwise shows notes and focuses the first problem
+function validateForm(form) {
+    let firstProblem = null;
+
+    form.querySelectorAll("input[id], select[id]").forEach((input) => {
+        const message = friendlyValidity(input);
+        setFieldError(input, message);
+
+        if (message && !firstProblem) {
+            firstProblem = input;
+        }
+    });
+
+    firstProblem?.focus();
+    return !firstProblem;
+}
+
+// once a note is showing, keep it in sync as the user types (it updates, then disappears)
+document.addEventListener("input", (event) => {
+    if (event.target.getAttribute?.("aria-invalid")) {
+        setFieldError(event.target, friendlyValidity(event.target));
+    }
+});
+
 // SHOW / HIDE PW
 document.addEventListener("click", (event) => {
     const toggle = event.target.closest(".pw-toggle");
