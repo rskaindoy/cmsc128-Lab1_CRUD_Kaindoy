@@ -313,6 +313,10 @@ input[aria-invalid="true"]:focus {
     color: var(--muted);
 }
 
+.icon-button:hover { background: var(--accent-soft); color: var(--accent); }
+.icon-button.delete:hover { background: var(--err-bg); color: var(--err-text); }
+
+
 /* ---------- layout: sidebar (cover) + content (paper) ---------- */
 
 main {
@@ -805,13 +809,17 @@ main {
 .task-row:hover .icon-button,
 .task-row:focus-within .icon-button,
 .task-row .icon-button:focus-visible { opacity: 1; }
-
-.icon-button:hover { background: var(--accent-soft); color: var(--accent); }
-.icon-button.delete:hover { background: var(--err-bg); color: var(--err-text); }
+.task-row .icon-button.delete:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    background: transparent;
+    color: var(--muted);
+}
 
 @media (hover: none) {
     .task-row .icon-button { opacity: 1; }
 }
+
 
 /* checkbox lives in the gutter, left of the margin line */
 .done-task-checkbox {

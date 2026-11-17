@@ -889,6 +889,8 @@ function taskRow(task) {
         ? `<span class="prio ${escapeHTML(task.priority.toLowerCase())}">${escapeHTML(task.priority)}</span>`
         : "";
 
+    const canDelete = task.user_id === currentUserId;
+
     return `
         <div class="task-row ${task.is_done ? "done" : ""}" role="row">
             <span class="cell-check" role="cell">
@@ -908,7 +910,10 @@ function taskRow(task) {
 
             <span class="cell cell-actions" role="cell">
                 <button class="icon-button" type="button" data-action="edit" data-id="${task.task_id}" aria-label="Edit &quot;${title}&quot;" title="Edit">${icon("pencil")}</button>
-                <button class="icon-button delete" type="button" data-action="delete" data-id="${task.task_id}" aria-label="Delete &quot;${title}&quot;" title="Delete">${icon("trash")}</button>
+                <button class="icon-button delete" type="button" data-action="delete" data-id="${task.task_id}"
+                    aria-label="Delete &quot;${title}&quot;" ${canDelete ? "" : "disabled"}
+                    title="${canDelete ? "Delete" : `Only ${escapeHTML(task.added_by)} can delete this task`}">${icon("trash")}
+                </button>
             </span>
         </div>
     `;
@@ -960,7 +965,8 @@ async function deleteTask(taskID) {
     const response = await apiFetch(`/tasks/${taskID}`, { method: "DELETE" });
 
     if (!response.ok) {
-        showToast("We couldn't delete that task. Try again in a moment.");
+        const data = await response.json().catch(() => ({}));
+        showToast(data.error || "We couldn't delete that task. Try again in a moment.");
         return;
     }
 
