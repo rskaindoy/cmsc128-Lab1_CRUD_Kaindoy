@@ -36,6 +36,11 @@ const toastText = document.getElementById("toast-text");
 const toastAction = document.getElementById("toast-action");
 let toastTimeout = null;
 
+// load when server error
+let tasksCache = {};        // listId -> last tasks that loaded successfully
+let loadState = "ok";       // "loading" | "failed" | "ok"
+let renderedListId = null;  // which list the table currently shows
+
 // filters + sorting
 const statusButtons = document.querySelectorAll("#status-filter button");
 const categoryFilter = document.getElementById("category-filter");
@@ -210,8 +215,8 @@ function showToast(message, actionLabel = null, onAction = null, duration = 4000
     toastTimeout = setTimeout(hideToast, duration);
 }
 
-function showError(message) {
-    showToast(message, null, null, 8000, "error");
+function showError(message, actionLabel = null, onAction = null) {
+    showToast(message, actionLabel, onAction, 8000, "error");
 }
 
 // ---------- side panel (one pattern for secondary content) ----------
@@ -559,6 +564,7 @@ memberList.addEventListener("click", async (event) => {
 // after leaving or deleting, the list is gone for this user, so fall back to the personal list
 async function afterLeavingList() {
     closeSidePanel({ restoreFocus: false });
+    delete tasksCache[currentListId];
     currentListId = null;
     membersCache = { listId: null, members: [] };
     await loadLists();
@@ -740,26 +746,59 @@ async function loadTasks() {
         return;
     }
 
+    const listId = currentListId;
+
+    // switching lists: don't leave the previous list's rows under the new title
+    if (renderedListId !== listId) {
+        allTasks = [];
+        loadState = "loading";
+        renderAll();
+    }
+
     const response = await apiFetch(`/lists/${currentListId}/tasks`);
 
+    if (listId !== currentListId) {
+        return;                         // user already moved on; ignore this late response
+    }
+
     if (!response.ok) {
-        showError("We couldn't load your lists. Check your connection and refresh.");
+        if (tasksCache[listId]) {       // old data exists: show it and warn with a toast
+            allTasks = tasksCache[listId];
+            loadState = "ok";
+            renderedListId = listId;
+            showError("We couldn't refresh this list.", "Retry", loadTasks);
+        } else {                        // nothing to show: say so in the table
+            loadState = "failed";
+            renderedListId = null;
+        }
+
+        renderAll();
         return;
     }
 
-    allTasks = await response.json();
+    tasksCache[listId] = await response.json();
+    allTasks = tasksCache[listId];
+    loadState = "ok";
+    renderedListId = listId;
 
     const list = currentList();
     taskSheet.classList.toggle("shared", list?.type === "collab");
 
     if (list?.type === "collab") {
-        fetchMembers().catch(() => {});     // cached, only fetches when the list changes
+        fetchMembers().catch(() => {});
     }
 
-    renderSummary(allTasks);
+    renderAll();
+}
 
-    visibleTasks = sortTasks(filterTasks(allTasks));
-    renderTasks(visibleTasks);
+function renderAll() {
+    if (loadState === "ok") {
+        renderSummary(allTasks);
+    } else {
+        taskSummary.textContent = "";
+    }
+
+    applyFilters();
 }
 
 function renderSummary(tasks) {
@@ -796,24 +835,29 @@ function updateFilterUI() {
     priorityFilter.classList.toggle("is-filtering", currentPriority !== "all");
 }
 
+function applyFilters() {
+    visibleTasks = sortTasks(filterTasks(allTasks));
+    renderTasks(visibleTasks);
+}
+
 statusButtons.forEach((button) => {
     button.addEventListener("click", () => {
         currentStatus = button.dataset.status;
         updateFilterUI();
-        loadTasks();
+        applyFilters();
     });
 });
 
 categoryFilter.addEventListener("change", () => {
     currentCategory = categoryFilter.value;
     updateFilterUI();
-    loadTasks();
+    applyFilters();
 });
 
 priorityFilter.addEventListener("change", () => {
     currentPriority = priorityFilter.value;
     updateFilterUI();
-    loadTasks();
+    applyFilters();
 });
 
 function clearFilters() {
@@ -823,7 +867,7 @@ function clearFilters() {
     categoryFilter.value = "all";
     priorityFilter.value = "all";
     updateFilterUI();
-    loadTasks();
+    applyFilters();
 }
 
 // ---------- sorting (click a column header; click it again to go back to date added) ----------
@@ -875,7 +919,7 @@ sortButtons.forEach((button) => {
     button.addEventListener("click", () => {
         currentSort = currentSort === button.dataset.sort ? "created_at" : button.dataset.sort;
         updateSortUI();
-        loadTasks();
+        applyFilters();
     });
 });
 
@@ -931,6 +975,16 @@ function taskRow(task) {
 }
 
 function renderTasks(tasks) {
+    if (loadState === "loading") {
+        taskList.innerHTML = `<div class="empty-state"><p>Opening this list…</p></div>`;
+        return;
+    }
+
+    if (loadState === "failed") {
+        taskList.innerHTML = `<div class="empty-state"><p>This list didn't load. <button type="button" class="link-button" data-action="retry">Try again</button></p></div>`;
+        return;
+    }
+
     if (tasks.length === 0) {
         taskList.innerHTML = allTasks.length > 0
             ? `<div class="empty-state"><p>Nothing matches these filters. <button type="button" class="link-button" data-action="clear-filters">Show everything</button></p></div>`
@@ -962,7 +1016,9 @@ taskList.addEventListener("click", (event) => {
         deleteTask(id);
     } else if (action === "clear-filters") {
         clearFilters();
-    }
+    } else if (action === "retry") {
+        loadTasks();
+}
 });
 
 taskList.addEventListener("change", async (event) => {
@@ -989,7 +1045,8 @@ async function restoreTask(taskID) {
     const response = await apiFetch(`/tasks/${taskID}/restore`, { method: "PUT" });
 
     if (!response.ok) {
-        showError(data.error || "We couldn't delete that task. Try again in a moment.");
+        const data = await response.json().catch(() => ({}));
+        showError(data.error || "We couldn't restore that task. Try again in a moment.");
         return;
     }
 
@@ -1005,8 +1062,9 @@ async function doneTask(taskID, isDone) {
     });
 
     if (!response.ok) {
-        showError(data.error || "We couldn't delete that task. Try again in a moment.");
-        loadTasks();                // put the checkbox back to what the server has
+        const data = await response.json().catch(() => ({}));
+        showError(data.error || "We couldn't update that task. Try again in a moment.");
+        applyFilters();             // put the checkbox back to what we already have
         return;
     }
 

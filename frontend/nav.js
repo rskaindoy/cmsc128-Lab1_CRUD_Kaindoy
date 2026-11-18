@@ -66,11 +66,22 @@ showAuthenticated = function (user) {
 };
 
 showLogin = function () {
+    // resets the screen and the in-memory state.
     baseShowLogin();
     document.body.classList.remove("logged-in");
     closePasswordForm();
+    closeSidePanel({ restoreFocus: false });
+    hideToast();
+
     lists = [];
     currentListId = null;
+    allTasks = null;
+    tasksCache = {};
+    membersCache = { listId: null, members: [] };
+    renderedListId = null;
+    loadState = "ok";
+    clearFilters();
+    taskList.innerHTML = "";
 };
 
 // LOGOUT
