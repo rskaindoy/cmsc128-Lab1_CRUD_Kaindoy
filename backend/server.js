@@ -222,13 +222,16 @@ app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 // READ TASKS
 app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const tasks = db.prepare(`
-        SELECT t.*, u.display_name AS added_by
+        SELECT t.*, u.display_name AS added_by,
+            (lm.user_id IS NOT NULL) AS is_member,
+            (t.user_id = ? OR ? = 1) AS can_delete
         FROM Task t
         JOIN User u ON u.user_id = t.user_id
+        LEFT JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = t.user_id
         WHERE t.list_id = ?
         AND t.deleted_at IS NULL
         ORDER BY t.due ASC
-    `).all(req.listId);
+    `).all(req.session.userId, req.isOwner ? 1 : 0, req.listId);
 
     res.json(tasks);
 });
@@ -269,23 +272,30 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
     });
 });
 
+// a task the user can reach (member of its list), plus who created it and who owns the list
+function findTaskForUser(taskId, userId, isDeleted) {
+    return db.prepare(`
+        SELECT t.user_id, l.owner_id
+        FROM Task t
+        JOIN List l ON l.list_id = t.list_id
+        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
+        WHERE t.task_id = ?
+        AND t.deleted_at IS ${isDeleted ? "NOT NULL" : "NULL"}
+    `).get(userId, taskId);
+}
+
 // DELETE TASK (only the person who added it)
 app.delete("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
-    const task = db.prepare(`
-        SELECT t.user_id
-        FROM Task t
-        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
-        WHERE t.task_id = ? AND t.deleted_at IS NULL
-    `).get(req.session.userId, id);
+    const task = findTaskForUser(id, req.session.userId, false);
 
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
     }
 
-    if (task.user_id !== req.session.userId) {
-        return res.status(403).json({ error: "Only the person who added this task can delete it." });
+    if (task.user_id !== req.session.userId && task.owner_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task or the list owner can delete it." });
     }
 
     db.prepare(`
@@ -302,19 +312,14 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
 app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
     const { id } = req.params;
 
-    const task = db.prepare(`
-        SELECT t.user_id
-        FROM Task t
-        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
-        WHERE t.task_id = ?
-    `).get(req.session.userId, id);
+    const task = findTaskForUser(id, req.session.userId, true);
 
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
     }
 
-    if (task.user_id !== req.session.userId) {
-        return res.status(403).json({ error: "Only the person who added this task can restore it." });
+    if (task.user_id !== req.session.userId && task.owner_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task or the list owner can restore it." });
     }
 
     const statement = db.prepare(`
