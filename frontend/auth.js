@@ -56,10 +56,21 @@ function friendlyError(error) {
 
 // fetch() for routes that need a login. Sends the session cookie, and if the server says we're not logged in anymore (401), sends the user back to login screen.
 async function apiFetch(path, options = {}) {
-    const response = await fetch(`${API_URL}${path}`, {
-        credentials: "include",
-        ...options
-    });
+    let response;
+
+    try {
+        response = await fetch(`${API_URL}${path}`, {
+            credentials: "include",
+            ...options
+        });
+    } catch (error) {
+        // server unreachable or timed out: return a failed response so every
+        // caller's `!response.ok` branch runs instead of an unhandled exception
+        return new Response(JSON.stringify({ error: friendlyError(error) }), {
+            status: 503,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
 
     if (response.status === 401) {
         setMessage(loginMessage, "Your session has expired. Please log in again.");
