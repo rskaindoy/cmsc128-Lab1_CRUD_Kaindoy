@@ -187,10 +187,12 @@ function hideToast() {
     toastAction.onclick = null;
 }
 
-function showToast(message, actionLabel = null, onAction = null, duration = 4000) {
+function showToast(message, actionLabel = null, onAction = null, duration = 4000, type = "info") {
     clearTimeout(toastTimeout);
 
     toastText.textContent = message;
+    toast.classList.toggle("error", type === "error");
+    toast.setAttribute("role", type === "error" ? "alert" : "status");
 
     if (actionLabel && onAction) {
         toastAction.textContent = actionLabel;
@@ -206,6 +208,10 @@ function showToast(message, actionLabel = null, onAction = null, duration = 4000
 
     toast.hidden = false;
     toastTimeout = setTimeout(hideToast, duration);
+}
+
+function showError(message) {
+    showToast(message, null, null, 8000, "error");
 }
 
 // ---------- side panel (one pattern for secondary content) ----------
@@ -280,7 +286,7 @@ async function loadLists() {
     const response = await apiFetch("/lists");
 
     if (!response.ok) {
-        console.error("Failed to load lists.");
+        showError("We couldn't load your lists. Check your connection and refresh.");
         return;
     }
 
@@ -734,7 +740,7 @@ async function loadTasks() {
     const response = await apiFetch(`/lists/${currentListId}/tasks`);
 
     if (!response.ok) {
-        console.error("Failed to load tasks.");
+        showError("We couldn't load your lists. Check your connection and refresh.");
         return;
     }
 
@@ -968,7 +974,7 @@ async function deleteTask(taskID) {
 
     if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        showToast(data.error || "We couldn't delete that task. Try again in a moment.");
+        showError(data.error || "We couldn't delete that task. Try again in a moment.");
         return;
     }
 
@@ -980,7 +986,7 @@ async function restoreTask(taskID) {
     const response = await apiFetch(`/tasks/${taskID}/restore`, { method: "PUT" });
 
     if (!response.ok) {
-        showToast("We couldn't restore that task. Try again in a moment.");
+        showError(data.error || "We couldn't delete that task. Try again in a moment.");
         return;
     }
 
@@ -996,7 +1002,7 @@ async function doneTask(taskID, isDone) {
     });
 
     if (!response.ok) {
-        showToast("We couldn't update that task. Try again in a moment.");
+        showError(data.error || "We couldn't delete that task. Try again in a moment.");
         loadTasks();                // put the checkbox back to what the server has
         return;
     }

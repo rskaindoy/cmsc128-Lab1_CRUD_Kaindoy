@@ -998,7 +998,14 @@ body.panel-open .panel-scrim { display: block; }
     font-weight: 700;
 }
 
+.toast.error {
+    background: var(--note-bg);
+    color: var(--note-text);
+    border: 1px solid var(--note-border);
+}
+
 .toast button:hover { background: rgba(255, 255, 255, 0.15); }
+.toast.error button { border-color: var(--note-accent); color: var(--note-text); }
 
 @keyframes toast-in {
     from { opacity: 0; transform: translate(-50%, 8px); }
