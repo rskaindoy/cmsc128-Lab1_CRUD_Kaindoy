@@ -889,7 +889,8 @@ function taskRow(task) {
         ? `<span class="prio ${escapeHTML(task.priority.toLowerCase())}">${escapeHTML(task.priority)}</span>`
         : "";
 
-    const canDelete = task.user_id === currentUserId;
+    const canDelete = Boolean(task.can_delete);
+    const addedBy = escapeHTML(task.added_by) + (task.is_member ? "" : ` <span class="former">(left)</span>`);
 
     return `
         <div class="task-row ${task.is_done ? "done" : ""}" role="row">
@@ -906,13 +907,13 @@ function taskRow(task) {
 
             <span class="cell cell-cat cat-${escapeHTML((task.tag || "").toLowerCase())}" role="cell">${escapeHTML(task.tag || "")}</span>
             <span class="cell cell-prio" role="cell">${priority}</span>
-            ${ shared ? `<span class="cell cell-by" role="cell">${escapeHTML(task.added_by)}</span>` : "" }
+            ${ shared ? `<span class="cell cell-by" role="cell">${addedBy}</span>` : "" }
 
             <span class="cell cell-actions" role="cell">
                 <button class="icon-button" type="button" data-action="edit" data-id="${task.task_id}" aria-label="Edit &quot;${title}&quot;" title="Edit">${icon("pencil")}</button>
                 <button class="icon-button delete" type="button" data-action="delete" data-id="${task.task_id}"
                     aria-label="Delete &quot;${title}&quot;" ${canDelete ? "" : "disabled"}
-                    title="${canDelete ? "Delete" : `Only ${escapeHTML(task.added_by)} can delete this task`}">${icon("trash")}
+                    title="${canDelete ? "Delete" : `Only ${escapeHTML(task.added_by)} or the list owner can delete this task`}">${icon("trash")}
                 </button>
             </span>
         </div>

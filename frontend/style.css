@@ -778,6 +778,8 @@ main {
     font-weight: 600;
 }
 
+.former { font-weight: 400; color: var(--muted); font-size: 11px; font-style: italic; }
+
 .prio {
     display: inline-flex;
     align-items: center;
