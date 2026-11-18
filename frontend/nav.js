@@ -99,8 +99,7 @@ logoutButton.addEventListener("click", async() => {
         loginMessage.textContent = "";
         showLogin();
     } catch (error) {
-        showToast("We couldn't log you out. Check your connection and try again.");
-        // alert("Couldn't log out. Please try again.");
+        showError("We couldn't log you out. Check your connection and try again.", "Retry", () => logoutButton.click());
     }
 });
 
