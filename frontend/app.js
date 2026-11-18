@@ -395,6 +395,7 @@ newListForm.addEventListener("submit", async (event) => {
         }
 
         closeNewListForm();
+        await loadLists();
         selectList(data.list_id);
         showToast(`Created "${name}".`);
     } catch (error) {
