@@ -346,6 +346,7 @@ function selectList(listId) {
     if (activeView !== "tasks") {
         showView("tasks");          // from nav.js; reloads lists and tasks
     } else {
+        setMessage(quickAddMessage, "");
         renderListNav();
         loadTasks();
     }
@@ -730,6 +731,8 @@ quickAddForm.addEventListener("submit", async (event) => {
         setMessage(quickAddMessage, friendlyError(error));
     }
 });
+
+quickAddInput.addEventListener("input", () => setMessage(quickAddMessage, ""));
 
 // ---------- read tasks ----------
 async function loadTasks() {
