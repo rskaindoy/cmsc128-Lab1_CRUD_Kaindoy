@@ -75,32 +75,36 @@ showLogin = function () {
 
     lists = [];
     currentListId = null;
-    allTasks = null;
+    allTasks = [];
     tasksCache = {};
     membersCache = { listId: null, members: [] };
     renderedListId = null;
     loadState = "ok";
-    clearFilters();
+    resetFilters();
     taskList.innerHTML = "";
 };
 
 // LOGOUT
 logoutButton.addEventListener("click", async() => {
+    let response; 
+
     try {
-        const response = await fetch(`${API_URL}/auth/logout`, {
+        response = await fetch(`${API_URL}/auth/logout`, {
             method: "POST",
             credentials: "include"
         });
-
-        if (!response.ok) {
-            throw new Error("Logout failed");
-        }
-
-        loginMessage.textContent = "";
-        showLogin();
     } catch (error) {
         showError("We couldn't log you out. Check your connection and try again.", "Retry", () => logoutButton.click());
+        return;
     }
+
+    if (!response.ok) {
+        showError("We couldn't log you out. Try again in a moment.", "Retry", () => logoutButton.click());
+        return;
+    }
+
+    loginMessage.textContent = "";
+    showLogin();            // a bug here now shows in the console instead of a false toast
 });
 
 // PROFILE

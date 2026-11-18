@@ -291,7 +291,9 @@ async function loadLists() {
     const response = await apiFetch("/lists");
 
     if (!response.ok) {
-        showError("We couldn't load your lists. Check your connection and refresh.");
+        if (activeView !== "profile") {
+            showError("We couldn't load your lists. Check your connection and refresh.");
+        }
         return;
     }
 
@@ -860,13 +862,19 @@ priorityFilter.addEventListener("change", () => {
     applyFilters();
 });
 
-function clearFilters() {
+function resetFilters() {
     currentStatus = "all";
     currentCategory = "all";
     currentPriority = "all";
+    currentSort = "created_at";
     categoryFilter.value = "all";
     priorityFilter.value = "all";
     updateFilterUI();
+    updateSortUI();
+}
+
+function clearFilters() {
+    resetFilters();
     applyFilters();
 }
 
