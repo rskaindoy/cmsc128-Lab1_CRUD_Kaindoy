@@ -631,12 +631,12 @@ main {
 /* ---------- the sheet: every row sits on a ruled line ---------- */
 
 .sheet {
-    --cols: var(--gutter) minmax(0, 1fr) 190px 120px 120px 76px;
+    --cols: var(--gutter) minmax(0, 1fr) 240px 120px 120px 76px;
     margin-left: calc(-1 * (var(--gutter) + 24px));
 }
 
 .sheet.shared {
-    --cols: var(--gutter) minmax(0, 1fr) 190px 120px 120px 110px 76px;
+    --cols: var(--gutter) minmax(0, 1fr) 240px 120px 120px 110px 76px;
 }
 
 .sheet:not(.shared) .col-by { display: none; }
@@ -1186,7 +1186,7 @@ span.flatpickr-weekday { color: var(--muted); font-weight: 700; }
 
 @media (max-width: 1100px) {
     .sheet,
-    .sheet.shared { --cols: var(--gutter) minmax(0, 1fr) 180px 120px 76px; }
+    .sheet.shared { --cols: var(--gutter) minmax(0, 1fr) 240px 120px 76px; }
 
     .col-cat, .cell-cat, .col-by, .cell-by { display: none !important; }
 }
