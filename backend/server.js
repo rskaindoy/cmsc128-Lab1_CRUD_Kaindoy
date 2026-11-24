@@ -134,14 +134,14 @@ app.post("/api/auth/login", async (req, res) => {
 
     // check if user exists
     if (!user) {
-        return res.status(401).json({error: "Invalid username."});
+        return res.status(401).json({error: "Invalid username or password."});
     }
 
     // check pw
     const pw_match = await bcrypt.compare(pw, user.pw_hash);
 
     if (!pw_match) {
-        return res.status(401).json({error: "Invalid password."});
+        return res.status(401).json({error: "Invalid password or password."});
     }
 
     // login successful !
@@ -391,11 +391,11 @@ function requireMember(req, res, next) {
         WHERE l.list_id = ? AND lm.user_id = ?
     `).get(list_id, req.session.userId);
 
-    console.log({
-        list_id,
-        sessionUserId: req.session.userId,
-        found: !!list
-    });
+    // console.log({
+    //     list_id,
+    //     sessionUserId: req.session.userId,
+    //     found: !!list
+    // });
 
     // 404 instead of 403 so people can't probe which list ids exist
     if (!list) {
