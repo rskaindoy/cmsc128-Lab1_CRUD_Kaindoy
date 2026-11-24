@@ -342,19 +342,19 @@ Server-side authorization on every task and list route:
 2. Start the server on it:
    `TURSO_DATABASE_URL="file:pentest.db" TURSO_AUTH_TOKEN="local" npm start`
 3. Run the requests in `pentest/test.http` in order (VS Code REST Client).
-4. Vulnerable version: `git checkout pentest-vulnerable` (only the membership clauses are removed), restart, and repeat.
+4. Vulnerable version: `git checkout pentest-vulnerable` (only the membership checks on task edit, mark-done, and reading a list's tasks are removed), restart, and repeat.
 5. Protected version: `git checkout main`, delete `pentest.db`, recreate it, and repeat.
 
 ### Results
 | Request (as User B) | Vulnerable branch | Protected (`main`) |
 |---|---|---|
-| Edit A's task | [200, title changed] | 404 "Task not found"; A's task unchanged |
-| Mark A's task done | [200] | 404 "Task not found" |
-| Delete A's task | [result] | 404 "Task not found" |
-| Read A's list tasks | [result] | 404 "List not found" |
-| Read A's list members | [result] | 404 "List not found" |
-| Add self to A's list | [result] | 404 "List not found" |
-| A edits her own task (control) | 200 | 200 "Task updated!" |
+| Edit A's task | 200 "Task updated!", title changed to "HACKED by B" | 404 "Task not found"; A's task unchanged |
+| Mark A's task done | 200 | 404 "Task not found" |
+| Delete A's task |  404 "Task not found" | 404 "Task not found" |
+| Read A's list tasks | 200, returns A's tasks | 404 "List not found" |
+| Read A's list members | 404 "List not found" | 404 "List not found" |
+| Add self to A's list | 404 "List not found" | 404 "List not found" |
+| A edits her own task (control) | 200 "Task updated!" | 200 "Task updated!" |
 
 ### Conclusion
 Without the membership check, changing the task ID in the URL let a stranger modify another user's task. With server-side authorization in the SQL queries and middleware, the same requests are rejected and A's data is unchanged.
