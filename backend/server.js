@@ -23,8 +23,13 @@ const app = express();
 const PORT = 3000;
 
 // middleware
+const allowedOrigins = [
+    "http://127.0.0.1:5500",
+    process.env.FRONTEND_URL     
+].filter(Boolean);
+
 app.use(cors({
-    origin: "http://127.0.0.1:5500",
+    origin: allowedOrigins,
     credentials: true
 }));
 app.use(express.json());
@@ -43,7 +48,7 @@ app.use(cookieSession({
     keys: [process.env.SESSION_SECRET],
     maxAge: 1000 * 60 * 60 * 24,    // 24 hours
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     secure: process.env.NODE_ENV === "production"
 }));
 
@@ -139,7 +144,7 @@ app.post("/api/auth/login", async (req, res) => {
     const pw_match = await bcrypt.compare(pw, user.pw_hash);
 
     if (!pw_match) {
-        return res.status(401).json({error: "Invalid password or password."});
+        return res.status(401).json({error: "Invalid username or password."});
     }
 
     // login successful !
