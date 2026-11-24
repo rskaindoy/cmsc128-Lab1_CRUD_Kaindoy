@@ -18,7 +18,7 @@ db.exec(`
 
     CREATE TABLE IF NOT EXISTS Task (
         task_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER,
+        user_id INTEGER NOT NULL,
         list_id INTEGER NOT NULL,
 
         title VARCHAR(255) NOT NULL,

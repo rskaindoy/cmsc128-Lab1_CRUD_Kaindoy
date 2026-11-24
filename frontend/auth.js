@@ -56,10 +56,21 @@ function friendlyError(error) {
 
 // fetch() for routes that need a login. Sends the session cookie, and if the server says we're not logged in anymore (401), sends the user back to login screen.
 async function apiFetch(path, options = {}) {
-    const response = await fetch(`${API_URL}${path}`, {
-        credentials: "include",
-        ...options
-    });
+    let response;
+
+    try {
+        response = await fetch(`${API_URL}${path}`, {
+            credentials: "include",
+            ...options
+        });
+    } catch (error) {
+        // server unreachable or timed out: return a failed response so every
+        // caller's `!response.ok` branch runs instead of an unhandled exception
+        return new Response(JSON.stringify({ error: friendlyError(error) }), {
+            status: 503,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
 
     if (response.status === 401) {
         setMessage(loginMessage, "Your session has expired. Please log in again.");
@@ -68,6 +79,76 @@ async function apiFetch(path, options = {}) {
 
     return response;
 }
+
+// FIELD VALIDATION (replaces the browser's pop-ups)
+function friendlyValidity(input) {
+    const label = (input.closest(".field")?.querySelector("label")?.textContent || "this field").trim().toLowerCase();
+    const v = input.validity;
+
+    if (v.valueMissing) return input.dataset.missing || `Enter your ${label}.`;
+
+    if (input.minLength > 0 && input.value.length < input.minLength) {
+        return `Add ${input.minLength - input.value.length} more character${input.minLength - input.value.length === 1 ? "" : "s"} (at least ${input.minLength} needed).`;
+    }
+
+    if (v.patternMismatch) return input.title || "Check the format and try again.";
+    if (v.tooLong) return `Keep this under ${input.maxLength} characters.`;
+    if (!v.valid) return input.validationMessage;
+
+    return "";
+}
+
+function setFieldError(input, message) {
+    const anchor = input.closest(".pw-wrap, .inline-field") || input;
+    let note = anchor.parentElement.querySelector(":scope > .field-error");
+
+    if (!message) {
+        note?.remove();
+        input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
+        return;
+    }
+
+    if (!note) {
+        note = document.createElement("p");
+        note.className = "field-error";
+        note.id = `err-${input.id}`;
+        note.setAttribute("role", "status");
+        anchor.after(note);
+    }
+
+    note.textContent = message;
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", note.id);
+}
+
+function clearFieldErrors(form) {
+    form.querySelectorAll("input, select").forEach((input) => setFieldError(input, ""));
+}
+
+// returns true if everything is fine; otherwise shows notes and focuses the first problem
+function validateForm(form) {
+    let firstProblem = null;
+
+    form.querySelectorAll("input[id], select[id]").forEach((input) => {
+        const message = friendlyValidity(input);
+        setFieldError(input, message);
+
+        if (message && !firstProblem) {
+            firstProblem = input;
+        }
+    });
+
+    firstProblem?.focus();
+    return !firstProblem;
+}
+
+// once a note is showing, keep it in sync as the user types (it updates, then disappears)
+document.addEventListener("input", (event) => {
+    if (event.target.getAttribute?.("aria-invalid")) {
+        setFieldError(event.target, friendlyValidity(event.target));
+    }
+});
 
 // SHOW / HIDE PW
 document.addEventListener("click", (event) => {
@@ -105,6 +186,7 @@ showLoginButton.addEventListener("click", () => {
 // LOGIN
 loginForm.addEventListener("submit", async(event) => {
     event.preventDefault();
+    if (!validateForm(loginForm)) return;   
 
     const username = document.getElementById("login-username").value;
     const pw = document.getElementById("login-pw").value;
@@ -141,6 +223,7 @@ loginForm.addEventListener("submit", async(event) => {
 // REGISTER
 regForm.addEventListener("submit", async(event) => {
     event.preventDefault();
+    if (!validateForm(regForm)) return;  
 
     const username = document.getElementById("reg-username").value;
     const display_name = document.getElementById("reg-display-name").value;

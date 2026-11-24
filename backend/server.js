@@ -37,6 +37,10 @@ app.use((req, res, next) => {
 });
 
 // makes the session last 24 hours
+
+const isProd = process.env.NODE_ENV === "production";
+app.set("trust proxy", 1);      // needed so secure cookies work behind a host (like Render)
+
 app.use(session({
     store: new SQLiteStore({
         db: "sessions.db",
@@ -46,7 +50,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,                         // JS can't read the cookie (limits XSS damage)
+        sameSite: isProd ? "none" : "lax",      // "none" only if frontend and API are on different domains
+        secure: isProd                          // HTTPS only in production; must be false on localhost
     }
 }));
 
@@ -134,14 +141,14 @@ app.post("/api/auth/login", async (req, res) => {
 
     // check if user exists
     if (!user) {
-        return res.status(401).json({error: "Invalid username."});
+        return res.status(401).json({error: "Invalid username or password."});
     }
 
     // check pw
     const pw_match = await bcrypt.compare(pw, user.pw_hash);
 
     if (!pw_match) {
-        return res.status(401).json({error: "Invalid password."});
+        return res.status(401).json({error: "Invalid password or password."});
     }
 
     // login successful !
@@ -222,13 +229,16 @@ app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 // READ TASKS
 app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
     const tasks = db.prepare(`
-        SELECT t.*, u.display_name AS added_by
+        SELECT t.*, u.display_name AS added_by,
+            (lm.user_id IS NOT NULL) AS is_member,
+            (t.user_id = ? OR ? = 1) AS can_delete
         FROM Task t
         JOIN User u ON u.user_id = t.user_id
+        LEFT JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = t.user_id
         WHERE t.list_id = ?
         AND t.deleted_at IS NULL
         ORDER BY t.due ASC
-    `).all(req.listId);
+    `).all(req.session.userId, req.isOwner ? 1 : 0, req.listId);
 
     res.json(tasks);
 });
@@ -239,7 +249,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
     const title = asString(req.body.title);
-    const due = req.body.title || null;         // empty string = no due date
+    const due = req.body.due || null;         // empty string = no due date
     const { priority, tag } = req.body;
 
     const problem = validateTask({ title, due, priority, tag });
@@ -260,7 +270,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
@@ -269,53 +279,63 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
     });
 });
 
-// DELETE TASK
+// a task the user can reach (member of its list), plus who created it and who owns the list
+function findTaskForUser(taskId, userId, isDeleted) {
+    return db.prepare(`
+        SELECT t.user_id, l.owner_id
+        FROM Task t
+        JOIN List l ON l.list_id = t.list_id
+        JOIN ListMember lm ON lm.list_id = t.list_id AND lm.user_id = ?
+        WHERE t.task_id = ?
+        AND t.deleted_at IS ${isDeleted ? "NOT NULL" : "NULL"}
+    `).get(userId, taskId);
+}
+
+// DELETE TASK (only the person who added it)
 app.delete("/api/tasks/:id", requireAuth, (req, res) => {
     const { id } = req.params;
 
-    const statement = db.prepare(`
+    const task = findTaskForUser(id, req.session.userId, false);
+
+    if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    if (task.user_id !== req.session.userId && task.owner_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task or the list owner can delete it." });
+    }
+
+    db.prepare(`
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at is NULL
-    `);
+    `).run(id);
 
-    const result = statement.run(id, req.session.userId);
-
-    if (result.changes === 0) {
-        return res.status(404).json({
-            message: "Task not found"
-        });
-    }
-
-    res.json({
-        message: "Task deleted!"
-    });
+    res.json({ message: "Task deleted!" });
 });
 
 // RESTORE DELETED TASK
 app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
     const { id } = req.params;
 
+    const task = findTaskForUser(id, req.session.userId, true);
+
+    if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+    }
+
+    if (task.user_id !== req.session.userId && task.owner_id !== req.session.userId) {
+        return res.status(403).json({ error: "Only the person who added this task or the list owner can restore it." });
+    }
+
     const statement = db.prepare(`
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
-    `);
+    `).run(id);
 
-    const result = statement.run(id, req.session.userId);
-
-    if (result.changes === 0) {
-        return res.status(404).json({
-            message: "Task not found"
-        });
-    }
-
-    res.json({
-        message: "Task restored!"
-    });
+    res.json({ message: "Task restored!" });
 });
 
 // CHECK / UNCHECK TASKS
@@ -335,7 +355,7 @@ app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
 
     if (result.changes === 0) {
         return res.status(404).json({
-            message: "Task not found"
+            error: "Task not found"
         });
     }
 
@@ -378,11 +398,11 @@ function requireMember(req, res, next) {
         WHERE l.list_id = ? AND lm.user_id = ?
     `).get(list_id, req.session.userId);
 
-    console.log({
-        list_id,
-        sessionUserId: req.session.userId,
-        found: !!list
-    });
+    // console.log({
+    //     list_id,
+    //     sessionUserId: req.session.userId,
+    //     found: !!list
+    // });
 
     // 404 instead of 403 so people can't probe which list ids exist
     if (!list) {

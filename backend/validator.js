@@ -36,7 +36,7 @@ function validatePassword(pw, label = "Password") {
 
     // bcrypt counts bytes, not characters (emoji and accented letters take more than one)
     if (Buffer.byteLength(pw, "utf8") > PW_MAX_BYTES) {
-        return `${label} is too long (${PW_MAX_BYTES} characters max; emoji = 4 characters, accented letters = 2 bytes.`;
+        return `${label} is too long. Try a shorter one (72 characters max, and emoji or accented letters count extra).`;
     }
 
     return null;

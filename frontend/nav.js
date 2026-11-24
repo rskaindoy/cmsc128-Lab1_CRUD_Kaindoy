@@ -27,7 +27,9 @@ function showView(name) {
         }
     });
 
-    addTaskPanel.classList.remove("open"); // from app.js
+    closeSidePanel({ restoreFocus: false });
+
+    // addTaskPanel.classList.remove("open"); // from app.js
 
     renderListNav();                        // highlights the active list, or none when on Profile
 
@@ -64,30 +66,45 @@ showAuthenticated = function (user) {
 };
 
 showLogin = function () {
+    // resets the screen and the in-memory state.
     baseShowLogin();
     document.body.classList.remove("logged-in");
     closePasswordForm();
+    closeSidePanel({ restoreFocus: false });
+    hideToast();
+
     lists = [];
     currentListId = null;
+    allTasks = [];
+    tasksCache = {};
+    membersCache = { listId: null, members: [] };
+    renderedListId = null;
+    loadState = "ok";
+    resetFilters();
+    taskList.innerHTML = "";
 };
 
 // LOGOUT
 logoutButton.addEventListener("click", async() => {
+    let response; 
+
     try {
-        const response = await fetch(`${API_URL}/auth/logout`, {
+        response = await fetch(`${API_URL}/auth/logout`, {
             method: "POST",
             credentials: "include"
         });
-
-        if (!response.ok) {
-            throw new Error("Logout failed");
-        }
-
-        loginMessage.textContent = "";
-        showLogin();
     } catch (error) {
-        alert("Couldn't log out. Please try again.");
+        showError("We couldn't log you out. Check your connection and try again.", "Retry", () => logoutButton.click());
+        return;
     }
+
+    if (!response.ok) {
+        showError("We couldn't log you out. Try again in a moment.", "Retry", () => logoutButton.click());
+        return;
+    }
+
+    loginMessage.textContent = "";
+    showLogin();            // a bug here now shows in the console instead of a false toast
 });
 
 // PROFILE
@@ -280,25 +297,25 @@ changePwForm.addEventListener("submit", async (event) => {
     const new_pw = document.getElementById("new-pw").value;
     const confirm_pw = document.getElementById("confirm-pw").value;
 
+    event.preventDefault();
     setMessage(changePwMessage, "");
 
-    // check what we can before bothering the server
-    if (new_pw.length < 8) {
-        setMessage(changePwMessage, "New password must be at least 8 characters.");
-        return;
-    }
+    if (!validateForm(changePwForm)) return;
+
+    const newInput = document.getElementById("new-pw");
+    const confirmInput = document.getElementById("confirm-pw");
 
     if (new_pw !== confirm_pw) {
-        setMessage(changePwMessage, "The new passwords don't match.");
+        setFieldError(confirmInput, "These don't match yet. Retype your new password to confirm.");
+        confirmInput.focus();
         return;
     }
 
     if (new_pw === current_pw) {
-        setMessage(changePwMessage, "New password must be different from your current one.");
+        setFieldError(newInput, "Pick a password that's different from your current one.");
+        newInput.focus();
         return;
     }
-
-    setLoading(changePwForm, true, "Saving...");
 
     try {
         const response = await apiFetch(`/profile/password`, {
