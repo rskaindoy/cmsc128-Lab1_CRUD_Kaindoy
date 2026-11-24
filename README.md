@@ -1,4 +1,4 @@
-<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/4ab3449a-ba31-463e-a0f1-7c25864f1b67" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/a385f5af-2bcc-47ba-98e1-5ac224cfcbd8" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 44 AM" src="https://github.com/user-attachments/assets/fb42c810-487f-4ec8-b710-948abb6e5c02" /># USAD
+USAD
 
 **One step at a time.**
 *Matatapos din 'yan.*
@@ -105,7 +105,6 @@ HTML, CSS, and JavaScript keep the frontend lightweight and easy to host as a st
 - Updated the frontend API URL to point to the deployed backend.
 - Configured CORS to allow communication between the frontend and backend.
 - Configured the backend to connect to the hosted Turso database using environment variables, keeping database credentials out of the source code.
-
 
 
 **UX/UI**
@@ -317,6 +316,49 @@ If the task is not in one of the user's lists, no row changes and the API answer
 5. When the page loads, the frontend calls `GET /api/auth/me` to restore the logged-in state.
 6. If the cookie is missing or expired, protected routes answer `401` and `apiFetch()` sends the user back to the login screen.
 7. Logging out sets `req.session = null`, which clears the cookie.
+
+
+## Bonus: Pentesting (IDOR / URL modification)
+
+### Vulnerability tested
+**Insecure Direct Object Reference (IDOR).** Can a logged-in user who is *not* a member of a list read or modify its tasks by changing the task or list ID in the request URL?
+
+### Attack scenario
+1. User A registers, creates a collab list, and adds a task.
+2. User B registers separately and is not a member of A's list.
+3. B logged in with their own session and sent requests to A's task and list IDs (`PUT /api/tasks/:id`, `PUT /api/tasks/:id/done`, `DELETE /api/tasks/:id`, `GET /api/lists/:listId/tasks`, `GET/POST /api/lists/:listId/members`).
+
+### Security feature
+Server-side authorization on every task and list route:
+- Task edit/done queries only match rows whose `list_id` is in a list the session user belongs to:
+  `AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)`
+- Delete/restore use `findTaskForUser`, which joins `ListMember`, then only allow the task's creator or the list owner.
+- List routes use the `requireMember` middleware (and `requireOwner` for owner-only actions).
+- Unauthorized requests return **404**, not 403, so attackers can't tell which IDs exist.
+
+### How to reproduce
+1. Create the test database (from `backend/`):
+   `node -e "const {createClient}=require('@libsql/client');const fs=require('fs');createClient({url:'file:pentest.db'}).executeMultiple(fs.readFileSync('schema.sql','utf8')).then(()=>console.log('ready'))"`
+2. Start the server on it:
+   `TURSO_DATABASE_URL="file:pentest.db" TURSO_AUTH_TOKEN="local" npm start`
+3. Run the requests in `pentest/test.http` in order (VS Code REST Client).
+4. Vulnerable version: `git checkout pentest-vulnerable` (only the membership clauses are removed), restart, and repeat.
+5. Protected version: `git checkout main`, delete `pentest.db`, recreate it, and repeat.
+
+### Results
+| Request (as User B) | Vulnerable branch | Protected (`main`) |
+|---|---|---|
+| Edit A's task | [200, title changed] | 404 "Task not found"; A's task unchanged |
+| Mark A's task done | [200] | 404 "Task not found" |
+| Delete A's task | [result] | 404 "Task not found" |
+| Read A's list tasks | [result] | 404 "List not found" |
+| Read A's list members | [result] | 404 "List not found" |
+| Add self to A's list | [result] | 404 "List not found" |
+| A edits her own task (control) | 200 | 200 "Task updated!" |
+
+### Conclusion
+Without the membership check, changing the task ID in the URL let a stranger modify another user's task. With server-side authorization in the SQL queries and middleware, the same requests are rejected and A's data is unchanged.
+
 
 ## Screenshots
 
