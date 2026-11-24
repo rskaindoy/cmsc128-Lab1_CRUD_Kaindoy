@@ -347,7 +347,7 @@ main {
 #content > * { position: relative; }
 
 .view {
-    max-width: calc(var(--gutter) + 24px + 980px);
+    max-width: calc(var(--gutter) + 24px + 1400px);
     padding-left: calc(var(--gutter) + 24px);
 }
 
@@ -1082,7 +1082,7 @@ body.panel-open .panel-scrim { display: block; }
 
 /* sections are ruled like the task sheet */
 .group-title {
-    max-width: 640px;
+    max-width: 900px;
     margin: 36px 0 0;
     padding: 0 8px 6px;
     border-bottom: 2px solid var(--rule-strong);
@@ -1090,7 +1090,7 @@ body.panel-open .panel-scrim { display: block; }
 }
 
 .profile-card {
-    max-width: 640px;
+    max-width: 900px;
     background: transparent;
     border: 0;
     border-radius: 0;
@@ -1120,7 +1120,7 @@ body.panel-open .panel-scrim { display: block; }
 
 .profile-value input { flex: 1; min-width: 0; padding: 6px 10px; font-weight: 400; }
 
-#profile-message { max-width: 640px; }
+#profile-message { max-width: 900px; }
 
 /* change password */
 .pw-form {

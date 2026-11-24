@@ -1,4 +1,4 @@
-# USAD
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/4ab3449a-ba31-463e-a0f1-7c25864f1b67" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/a385f5af-2bcc-47ba-98e1-5ac224cfcbd8" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 44 AM" src="https://github.com/user-attachments/assets/fb42c810-487f-4ec8-b710-948abb6e5c02" /># USAD
 
 **One step at a time.**
 *Matatapos din 'yan.*
@@ -321,22 +321,34 @@ If the task is not in one of the user's lists, no row changes and the API answer
 ## Screenshots
 
 - Login page
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 01 21 AM" src="https://github.com/user-attachments/assets/289b9308-955a-499f-b707-9dae6433a5ea" />
 
 - Register page
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 02 30 AM" src="https://github.com/user-attachments/assets/d3e36599-402a-4e09-9aae-90a63fffc2d4" />
 
 - Dashboard (Personal list)
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 16 AM" src="https://github.com/user-attachments/assets/524a9161-e162-49f0-86dd-9e46d2ff5a87" />
 
 - Quick add and the Add task side panel
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 00 AM" src="https://github.com/user-attachments/assets/a510c803-8e37-4121-abe8-ebc536c135a1" />
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 28 AM" src="https://github.com/user-attachments/assets/2bc4607e-c5b4-4bb8-9777-103b189d1bda" />
 
 - Editing a task
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 36 AM" src="https://github.com/user-attachments/assets/1b67a068-b704-4ddb-83f4-e2c745a6ed16" />
 
 - Delete with Undo toast
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 44 AM" src="https://github.com/user-attachments/assets/1a07bf82-a4a9-47d4-9841-74e3e5281280" />
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 48 AM" src="https://github.com/user-attachments/assets/4b288035-59e8-4555-a4a4-ac1f677389ea" />
 
 - Filters and sorting
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 03 AM" src="https://github.com/user-attachments/assets/441985d2-cbe7-4ecc-a8af-c6b6c56a7831" />
 
-- Shared list with "Added by" column
+- Shared list
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 12 AM" src="https://github.com/user-attachments/assets/5e1c61b1-931f-47eb-8e79-3887dc67c7a6" />
 
 - Members panel
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/e2544056-6721-4381-a526-20453afb69f0" />
 
 - Profile page
+<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 32 AM" src="https://github.com/user-attachments/assets/696c56e3-7248-4d42-b0d9-de552d786c30" />
 
