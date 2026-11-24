@@ -13,8 +13,7 @@ const cors = require("cors");
 
 const db = require("./database");
 const bcrypt = require("bcrypt");
-const session = require("express-session");
-const SQLiteStore = require("connect-sqlite3")(session);
+const cookieSession = require("cookie-session");    // replaces const session = require("express-session"); const SQLiteStore = require("connect-sqlite3")(session);
 
 // for input validation
 const { asString, validateUsername, validateDisplayName, validatePassword, validateTask } = require("./validator");
@@ -36,25 +35,16 @@ app.use((req, res, next) => {
     next();
 });
 
-// makes the session last 24 hours
+// ...after app.use(express.json()) and the req.body middleware:
+app.set("trust proxy", 1);      // Render sits behind a proxy; needed for secure cookies
 
-const isProd = process.env.NODE_ENV === "production";
-app.set("trust proxy", 1);      // needed so secure cookies work behind a host (like Render)
-
-app.use(session({
-    store: new SQLiteStore({
-        db: "sessions.db",
-        dir: __dirname
-    }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24,
-        httpOnly: true,                         // JS can't read the cookie (limits XSS damage)
-        sameSite: isProd ? "none" : "lax",      // "none" only if frontend and API are on different domains
-        secure: isProd                          // HTTPS only in production; must be false on localhost
-    }
+app.use(cookieSession({
+    name: "usad_session",
+    keys: [process.env.SESSION_SECRET],
+    maxAge: 1000 * 60 * 60 * 24,    // 24 hours
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production"
 }));
 
 // test route
@@ -82,7 +72,7 @@ app.post("/api/auth/register", async (req, res) => {
     } 
 
     // check duplicate un (if un alr exists)
-    const existingUser = db.prepare(`
+    const existingUser = await db.prepare(`
             SELECT user_id
             FROM User
             WHERE username = ?
@@ -99,22 +89,23 @@ app.post("/api/auth/register", async (req, res) => {
     let result;
 
     try {
-        result = db.prepare(`
+        result = await db.prepare(`
             INSERT INTO User (username, display_name, pw_hash)
             VALUES (?, ?, ?)
         `).run(username, display_name, pw_hash);
     } catch (err) {
+        console.error("register insert failed:", err);
         // someone registered the same username between the check above and this insert
-        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        if (db.isUniqueViolation(err)) {
             return res.status(409).json({error: "Username is already taken."});
         }
 
         throw err;
     }
 
-    // acc created !
-    req.session.userId = result.lastInsertRowid;      // session is for this user;  
-    createList("My Tasks", result.lastInsertRowid, "personal");
+    // acc created ! 
+    await createList("My Tasks", result.lastInsertRowid, "personal");
+    req.session.userId = result.lastInsertRowid;      // session is for this user 
 
     res.status(201).json({
         message: "Account created successfully.",
@@ -133,7 +124,7 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     // find user
-    const user = db.prepare(`
+    const user = await db.prepare(`
             SELECT user_id, username, display_name, pw_hash
             FROM User
             WHERE username = ?
@@ -153,7 +144,7 @@ app.post("/api/auth/login", async (req, res) => {
 
     // login successful !
 
-    req.session.userId = user.user_id;      // session is for this user;  
+    req.session.userId = user.user_id;      // session is for this user  
 
     res.json({
         message: "Login successful.",
@@ -166,12 +157,12 @@ app.post("/api/auth/login", async (req, res) => {
 
 })
 
-app.get("/api/auth/me", (req, res) => {
+app.get("/api/auth/me", async (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({error: "Not authenticated"});
     }
 
-    const user = db.prepare(`
+    const user = await db.prepare(`
         SELECT user_id, username, display_name
         FROM User
         WHERE user_id = ?
@@ -186,24 +177,18 @@ app.get("/api/auth/me", (req, res) => {
     })
 })
 
-app.post("/api/auth/logout", async (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            return res.status(500).json({error: "Could not log out"});
-        }
-    
-        res.clearCookie("connect.sid");
+app.post("/api/auth/logout", (req, res) => {
+    req.session = null;         // cookie-session: setting it to null clears the cookie
 
-        res.json({
-            message: "Logout successful."
-        });
-   })
+    res.json({
+        message: "Logout successful."
+    });
 })
 
 
 // CRUD ROUTES 
 // CREATE TASK
-app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
+app.post("/api/lists/:listId/tasks", requireAuth, requireMember, async (req, res) => {
     const title = asString(req.body.title);
     const due = req.body.due || null;         // empty string = no due date
     const { priority, tag } = req.body;
@@ -214,7 +199,7 @@ app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
         return res.status(400).json({error: problem});
     }
 
-    const result = db.prepare(`
+    const result = await db.prepare(`
         INSERT INTO Task (user_id, list_id, title, due, priority, tag)
         VALUES (?, ?, ?, ?, ?, ?)
     `).run(req.session.userId, req.listId, title, due, priority, tag);
@@ -227,10 +212,10 @@ app.post("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 
 
 // READ TASKS
-app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
-    const tasks = db.prepare(`
+app.get("/api/lists/:listId/tasks", requireAuth, requireMember, async (req, res) => {
+    const tasks = await db.prepare(`
         SELECT t.*, u.display_name AS added_by,
-            (lm.user_id IS NOT NULL) AS is_member,
+            (lm.user_id IS NOT NULL) AS is_member, 
             (t.user_id = ? OR ? = 1) AS can_delete
         FROM Task t
         JOIN User u ON u.user_id = t.user_id
@@ -245,7 +230,7 @@ app.get("/api/lists/:listId/tasks", requireAuth, requireMember, (req, res) => {
 
 
 // UPDATE TASK
-app.put("/api/tasks/:id", requireAuth, (req, res) => {
+app.put("/api/tasks/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
 
     const title = asString(req.body.title);
@@ -258,15 +243,13 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
         return res.status(400).json({error: problem});
     }
 
-    const statement = db.prepare(`
+    const result = await db.prepare(`
         UPDATE Task
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
         AND deleted_at IS NULL
         AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
-    `);
-
-    const result = statement.run(title, due, priority, tag, id, req.session.userId);
+    `).run(title, due, priority, tag, id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -280,7 +263,7 @@ app.put("/api/tasks/:id", requireAuth, (req, res) => {
 });
 
 // a task the user can reach (member of its list), plus who created it and who owns the list
-function findTaskForUser(taskId, userId, isDeleted) {
+async function findTaskForUser(taskId, userId, isDeleted) {
     return db.prepare(`
         SELECT t.user_id, l.owner_id
         FROM Task t
@@ -291,11 +274,11 @@ function findTaskForUser(taskId, userId, isDeleted) {
     `).get(userId, taskId);
 }
 
-// DELETE TASK (only the person who added it)
-app.delete("/api/tasks/:id", requireAuth, (req, res) => {
+// DELETE TASK (only the person who added it or the list owner)
+app.delete("/api/tasks/:id", requireAuth, async (req, res) => {
     const { id } = req.params;
 
-    const task = findTaskForUser(id, req.session.userId, false);
+    const task = await findTaskForUser(id, req.session.userId, false);
 
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
@@ -305,7 +288,7 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
         return res.status(403).json({ error: "Only the person who added this task or the list owner can delete it." });
     }
 
-    db.prepare(`
+    await db.prepare(`
         UPDATE Task
         SET deleted_at = CURRENT_TIMESTAMP
         WHERE task_id = ?
@@ -316,10 +299,10 @@ app.delete("/api/tasks/:id", requireAuth, (req, res) => {
 });
 
 // RESTORE DELETED TASK
-app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
+app.put("/api/tasks/:id/restore", requireAuth, async (req, res) => {
     const { id } = req.params;
 
-    const task = findTaskForUser(id, req.session.userId, true);
+    const task = await findTaskForUser(id, req.session.userId, true);
 
     if (!task) {
         return res.status(404).json({ error: "Task not found" });
@@ -329,7 +312,7 @@ app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
         return res.status(403).json({ error: "Only the person who added this task or the list owner can restore it." });
     }
 
-    const statement = db.prepare(`
+    await db.prepare(`
         UPDATE Task
         SET deleted_at = NULL
         WHERE task_id = ?
@@ -339,19 +322,17 @@ app.put("/api/tasks/:id/restore", requireAuth, (req, res) => {
 });
 
 // CHECK / UNCHECK TASKS
-app.put("/api/tasks/:id/done", requireAuth, (req, res) => {
+app.put("/api/tasks/:id/done", requireAuth, async (req, res) => {
     const { id } = req.params;
     const { is_done } = req.body;
 
-    const statement = db.prepare(`
+    const result = await db.prepare(`
         UPDATE Task
         SET is_done = ?
         WHERE task_id = ?
         AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at IS NULL
-    `);
-
-    const result = statement.run(is_done ? 1 : 0, id, req.session.userId);
+    `).run(is_done ? 1 : 0, id, req.session.userId);
 
     if (result.changes === 0) {
         return res.status(404).json({
@@ -376,33 +357,26 @@ function requireAuth (req, res, next) {
 }
 
 // LIST HELPERS
-// creates the list and its owner's membership together, or neither
-const createList = db.transaction((name, owner_id, type = "collab") => {
-    const { lastInsertRowid: list_id } = db
-        .prepare("INSERT INTO List (name, owner_id, type) VALUES (?, ?, ?)")
-        .run(name, owner_id, type);
-    db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)")
-        .run(list_id, owner_id);
+// creates the list and its owner's membership together in ONE transaction, or neither
+async function createList(name, owner_id, type = "collab") {
+    const [listResult] = await db.batch([
+        { sql: "INSERT INTO List (name, owner_id, type) VALUES (?, ?, ?)", args: [name, owner_id, type] },
+        { sql: "INSERT INTO ListMember (list_id, user_id) VALUES (last_insert_rowid(), ?)", args: [owner_id] }
+    ]);
 
-    return list_id;
-});
+    return Number(listResult.lastInsertRowid);
+}
 
 // blocks users who aren't in the list; ownership comes from List.owner_id only
-function requireMember(req, res, next) {
+async function requireMember(req, res, next) {
     const list_id = Number(req.params.listId);
 
-    const list = db.prepare(`
+    const list = await db.prepare(`
         SELECT l.owner_id, l.type
         FROM List l
         JOIN ListMember lm ON lm.list_id = l.list_id
         WHERE l.list_id = ? AND lm.user_id = ?
     `).get(list_id, req.session.userId);
-
-    // console.log({
-    //     list_id,
-    //     sessionUserId: req.session.userId,
-    //     found: !!list
-    // });
 
     // 404 instead of 403 so people can't probe which list ids exist
     if (!list) {
@@ -425,8 +399,8 @@ function requireOwner(req, res, next) {
 
 // LIST ROUTES
 // VIEW LIST
-app.get("/api/lists", requireAuth, (req, res) => {
-    const lists = db.prepare(`
+app.get("/api/lists", requireAuth, async (req, res) => {
+    const lists = await db.prepare(`
         SELECT l.list_id, l.name, l.type,
             CASE WHEN l.owner_id = ? THEN 'owner' ELSE 'editor' END AS role,
             (SELECT COUNT(*) FROM ListMember WHERE list_id = l.list_id) AS member_count
@@ -440,14 +414,14 @@ app.get("/api/lists", requireAuth, (req, res) => {
 });
 
 // CREATE A NEW COLLAB LIST
-app.post("/api/lists", requireAuth, (req, res) => {
+app.post("/api/lists", requireAuth, async (req, res) => {
     const name = asString(req.body.name);
 
     if (!name || name.length > 50) {
         return res.status(400).json({error: "List name is required (max 50 characters)"});
     }
 
-    const list_id = createList(name, req.session.userId, "collab");
+    const list_id = await createList(name, req.session.userId, "collab");
 
     res.status(201).json({
         message: "List created!",
@@ -456,29 +430,29 @@ app.post("/api/lists", requireAuth, (req, res) => {
 });
 
 // RENAME LIST
-app.put("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+app.put("/api/lists/:listId", requireAuth, requireMember, requireOwner, async (req, res) => {
     const name = asString(req.body.name);
 
     if (!name || name.length > 50) {
         return res.status(400).json({error: "List name is required (max 50 characters)"});
     }
 
-    db.prepare("UPDATE List SET name = ? WHERE list_id = ?").run(name, req.listId);
+    await db.prepare("UPDATE List SET name = ? WHERE list_id = ?").run(name, req.listId);
 
     res.json({message: "List renamed!"});
 });
 
 // DELETE LIST
-app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req, res) => {
+app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, async (req, res) => {
     if (req.listType === "personal") {
         return res.status(400).json({error: "You can't delete your personal list."});
     }
 
-    db.transaction(() => {
-        db.prepare("DELETE FROM Task WHERE list_id = ?").run(req.listId);
-        db.prepare("DELETE FROM ListMember WHERE list_id = ?").run(req.listId);
-        db.prepare("DELETE FROM List WHERE list_id = ?").run(req.listId);
-    })();
+    await db.batch([
+        { sql: "DELETE FROM Task WHERE list_id = ?", args: [req.listId] },
+        { sql: "DELETE FROM ListMember WHERE list_id = ?", args: [req.listId] },
+        { sql: "DELETE FROM List WHERE list_id = ?", args: [req.listId] }
+    ]);
 
     res.json({message: "List deleted."});
 });
@@ -486,8 +460,8 @@ app.delete("/api/lists/:listId", requireAuth, requireMember, requireOwner, (req,
 
 // LIST MEMBER ROUTES
 // GET LIST MEMBERS
-app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => {
-    const members = db.prepare(`
+app.get("/api/lists/:listId/members", requireAuth, requireMember, async (req, res) => {
+    const members = await db.prepare(`
         SELECT u.user_id, u.username, u.display_name,
             CASE WHEN l.owner_id = u.user_id THEN 'owner' ELSE 'editor' END AS role
         FROM ListMember lm
@@ -501,7 +475,7 @@ app.get("/api/lists/:listId/members", requireAuth, requireMember, (req, res) => 
 });
 
 // ADD MEMBER BY USERNAME
-app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner, (req, res) => {
+app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner, async (req, res) => {
     if (req.listType === "personal") {
         return res.status(400).json({error: "Personal list can't be shared"});
     }
@@ -512,16 +486,16 @@ app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner,
         return res.status(400).json({error: "Username is required"});
     }
 
-    const user = db.prepare("SELECT user_id FROM User WHERE username = ?").get(username);
+    const user = await db.prepare("SELECT user_id FROM User WHERE username = ?").get(username);
 
     if (!user) {
         return res.status(404).json({error: "No user with that username"});
     }
 
     try {
-        db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)").run(req.listId, user.user_id);
+        await db.prepare("INSERT INTO ListMember (list_id, user_id) VALUES (?, ?)").run(req.listId, user.user_id);
     } catch (err) {
-        if (err.code === "SQLITE_CONSTRAINT_PRIMARYKEY") {
+        if (db.isUniqueViolation(err)) {
             return res.status(409).json({error: "That user is already in this list"});
         }
 
@@ -532,7 +506,7 @@ app.post("/api/lists/:listId/members", requireAuth, requireMember, requireOwner,
 });
 
 // owner removes someone or a member themselves leave
-app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, (req, res) => {
+app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, async (req, res) => {
     const target = Number(req.params.userId);
     const isSelf = target === req.session.userId;
 
@@ -540,14 +514,15 @@ app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, (re
         return res.status(403).json({error: "Only the list owner can remove members"});
     }
 
-    const list = db.prepare("SELECT owner_id FROM List WHERE list_id = ?").get(req.listId);
+    const list = await db.prepare("SELECT owner_id FROM List WHERE list_id = ?").get(req.listId);
 
     if (target === list.owner_id) {
         return res.status(400).json({error: "The owner can't leave. Delete the list instead."});
     }
 
-    const result = db.prepare(`
-        DELETE FROM ListMember WHERE list_id = ? AND user_id = ?
+    const result = await db.prepare(`
+        DELETE FROM ListMember 
+        WHERE list_id = ? AND user_id = ?
     `).run(req.listId, target)
 
     if (result.changes === 0) {
@@ -562,8 +537,8 @@ app.delete("/api/lists/:listId/members/:userId", requireAuth, requireMember, (re
 
 // PROFILE ROUTES
 // GET PROFILE
-app.get("/api/profile", requireAuth, (req, res) => {
-    const user = db.prepare(`
+app.get("/api/profile", requireAuth, async (req, res) => {
+    const user = await db.prepare(`
         SELECT user_id, username, display_name, created_at
         FROM User
         WHERE user_id = ?
@@ -579,7 +554,7 @@ app.get("/api/profile", requireAuth, (req, res) => {
 })
 
 // UPDATE PROFILE
-app.put("/api/profile", requireAuth, (req, res) => {
+app.put("/api/profile", requireAuth, async (req, res) => {
     const username = asString(req.body.username);
     const display_name = asString(req.body.display_name);
 
@@ -594,7 +569,7 @@ app.put("/api/profile", requireAuth, (req, res) => {
     } 
 
     // username must be unique, ignoring the user's own row
-    const taken = db.prepare(`
+    const taken = await db.prepare(`
         SELECT user_id
         FROM User
         WHERE username = ?
@@ -606,14 +581,14 @@ app.put("/api/profile", requireAuth, (req, res) => {
     }
 
     try {
-        db.prepare(`
+        await db.prepare(`
             UPDATE User
             SET username = ?, display_name = ?
             WHERE user_id = ?
         `).run(username, display_name, req.session.userId);
     } catch (err) {
         // someone took this username between the check above and this update
-        if (err.code === "SQLITE_CONSTRAINT_UNIQUE") {
+        if (db.isUniqueViolation(err)) {
             return res.status(409).json({error: "Username is already taken."});
         }
 
@@ -645,7 +620,7 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     }
 
     // get current user's pw hash
-    const user = db.prepare(`
+    const user = await db.prepare(`
         SELECT pw_hash
         FROM User
         WHERE user_id = ?
@@ -665,7 +640,7 @@ app.put("/api/profile/password", requireAuth, async (req, res) => {
     const newPwHash = await bcrypt.hash(new_pw, 10);
 
     // save new pw
-    db.prepare(`
+    await db.prepare(`
         UPDATE User
         SET pw_hash = ?
         WHERE user_id = ?
