@@ -37,6 +37,10 @@ app.use((req, res, next) => {
 });
 
 // makes the session last 24 hours
+
+const isProd = process.env.NODE_ENV === "production";
+app.set("trust proxy", 1);      // needed so secure cookies work behind a host (like Render)
+
 app.use(session({
     store: new SQLiteStore({
         db: "sessions.db",
@@ -46,7 +50,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,                         // JS can't read the cookie (limits XSS damage)
+        sameSite: isProd ? "none" : "lax",      // "none" only if frontend and API are on different domains
+        secure: isProd                          // HTTPS only in production; must be false on localhost
     }
 }));
 
