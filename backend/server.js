@@ -217,7 +217,7 @@ app.post("/api/lists/:listId/tasks", requireAuth, requireMember, async (req, res
 
 
 // READ TASKS
-app.get("/api/lists/:listId/tasks", requireAuth, requireMember, async (req, res) => {
+app.get("/api/lists/:listId/tasks", requireAuth, async (req, res) => {
     const tasks = await db.prepare(`
         SELECT t.*, u.display_name AS added_by,
             (lm.user_id IS NOT NULL) AS is_member, 
@@ -228,7 +228,7 @@ app.get("/api/lists/:listId/tasks", requireAuth, requireMember, async (req, res)
         WHERE t.list_id = ?
         AND t.deleted_at IS NULL
         ORDER BY t.due ASC
-    `).all(req.session.userId, req.isOwner ? 1 : 0, req.listId);
+    `).all(req.session.userId, 0, Number(req.params.listId));   // replaced req.isOwner ? 1 : 0, req.listId
 
     res.json(tasks);
 });
@@ -253,7 +253,6 @@ app.put("/api/tasks/:id", requireAuth, async (req, res) => {
         SET title = ?, due = ?, priority = ?, tag = ?
         WHERE task_id = ?
         AND deleted_at IS NULL
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
     `).run(title, due, priority, tag, id, req.session.userId);
 
     if (result.changes === 0) {
@@ -335,7 +334,6 @@ app.put("/api/tasks/:id/done", requireAuth, async (req, res) => {
         UPDATE Task
         SET is_done = ?
         WHERE task_id = ?
-        AND list_id IN (SELECT list_id FROM ListMember WHERE user_id = ?)
         AND deleted_at IS NULL
     `).run(is_done ? 1 : 0, id, req.session.userId);
 
