@@ -1,4 +1,4 @@
-<img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/4ab3449a-ba31-463e-a0f1-7c25864f1b67" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 05 25 AM" src="https://github.com/user-attachments/assets/a385f5af-2bcc-47ba-98e1-5ac224cfcbd8" /><img width="1680" height="1050" alt="Screenshot 2026-11-25 at 12 04 44 AM" src="https://github.com/user-attachments/assets/fb42c810-487f-4ec8-b710-948abb6e5c02" /># USAD
+USAD
 
 **One step at a time.**
 *Matatapos din 'yan.*
