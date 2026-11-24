@@ -1,4 +1,5 @@
 .env
+# local databases
 *.db
 *.db-journal
 node_modules/
