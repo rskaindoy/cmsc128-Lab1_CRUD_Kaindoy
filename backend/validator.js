@@ -47,7 +47,7 @@ function validateTask({ title, due, priority, tag }) {
         return "Task title is required.";
     }
 
-    if (!title.length > 255) {
+    if (title.length > 255) {
         return "Task title must be 255 characters or fewer.";
     }
 
