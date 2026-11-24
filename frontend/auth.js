@@ -1,6 +1,6 @@
 // store API URL
 // const API_URL = "http://127.0.0.1:3000/api";
-const API_URL = "https://usad-j5vo.onrender.com/";
+const API_URL = "https://usad-j5vo.onrender.com/api";
 
 const authSection = document.getElementById("auth-section");
 
