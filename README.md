@@ -96,22 +96,38 @@ HTML, CSS, and JavaScript keep the frontend lightweight and easy to host as a st
 
 ## What Was Refactored and Why (Activity 4)
 
-**Backend / database**
-- **Transactions:** creating a list and its owner's membership, and deleting a list with its tasks and members, each run in one `db.batch`, so they fully succeed or fully fail.
-- **Ownership checks inside the query** for routes that only have a task id (edit, done), so a user cannot touch a task outside their lists (no IDOR).
-- **`cookie-session`** replaced the session table, so no session lookup is needed on every request.
-- Secrets are read from environment variables only. `.env` is in `.gitignore`.
-- Deployed the frontend as a Render Static Site and the backend as a Render Web Service.
-- Updated the frontend API URL to point to the deployed backend.
-- Configured CORS to allow communication between the frontend and backend.
-- Configured the backend to connect to the hosted Turso database using environment variables, keeping database credentials out of the source code.
+**Backend:** Node.js + Express, with a Turso (hosted libSQL/SQLite) database.
+
+### Code
+- **HTML restructured:** the task section was cleaned up and the forms (task, members) moved into one reusable side panel.
+- **Server validation:** fixed the title length check in `validator.js` so over-long titles are rejected.
+- **Client validation:** added field-level validation helpers in `auth.js`, so forms show inline notes instead of native browser pop-ups.
+- Removed dead code and leftover `console.log`s.
+- Removed unused packages (`better-sqlite3`, `connect-sqlite3`, `express-session`) and stopped tracking `node_modules`. 
 
 
-**UX/UI**
-- Consistent feedback for every action (toasts, inline errors, disabled and "Saving..." buttons).
-- Labeled icon buttons, contrast-checked colors, and a responsive layout.
-- Updated the interface with a notebook-inspired aesthetic to create a more familiar, approachable, and organized task-management experience. The design reinforces the app's productivity theme while making task management feel more personal and less overwhelming.
-- One side panel pattern is reused for the task form and the members list.
+### Backend / database
+- **Transactions:** creating a list with its owner's membership, and deleting a list with its tasks and members, each run in one `db.batch`, so they fully succeed or fully fail.
+- **Ownership checks inside the query:** routes that only receive a task id (edit, mark done) filter by the user's list membership in SQL, so a user cannot touch a task outside their lists. Delete and restore use a join on `ListMember`, and list routes use `requireMember`/`requireOwner`. Unauthorized requests return **404**, so ids can't be probed. See the pentest section below.
+- **Schema constraint:** made `Task.user_id` `NOT NULL`, so every task always has a creator and the ownership checks can't be skipped by a missing value.
+- **Indexes** on `Task(list_id)` and `ListMember(user_id)`, since the main queries filter on those.
+- **`cookie-session`** replaced the session table: sessions live in a signed cookie, so there is no session lookup on each request and nothing to lose when the host's disk resets.
+- **Security fixes:** generic login error (no username enumeration), hardened session cookie flags, and rejection of too-long titles.
+- **Secrets:** the Turso database URL and auth token (and the session secret) are read from environment variables, never hardcoded. `.env` is gitignored, `.env.example` lists only the variable names, and on Render the real values are set in the dashboard.
+
+
+### UX/UI
+- **Feedback for every action:** success and error toasts, inline field errors (shown as amber notes and cleared when the user types again), and disabled or "Saving..." buttons while submitting. Network failures in `apiFetch` show an error instead of failing silently.
+- **Icon buttons** use SVG icons with `aria-label`s. 
+- **Notebook-inspired theme:** a consistent palette, typography, and ruled-paper look across all pages, including the profile page. It makes the app feel personal and organized instead of overwhelming.
+- **Contrast:** text and note colors checked for readability.
+- **One side-panel pattern** is reused for the task form and the members list.
+
+### Deployment
+- **Frontend:** Render Static Site. **Backend:** Render Web Service. **Database:** Turso, because Render's free disk is ephemeral and a local SQLite file would reset on every restart or redeploy.
+- The frontend's API URL points to the deployed backend, and CORS and cross-site cookies (`secure`, `sameSite: none` in production) are configured for the deployed frontend.
+- Database credentials and the session secret are set as environment variables in the Render dashboard and never committed.
+- **Live app:** `https://cmsc128-usad.onrender.com/`. Note for the first visit: Render's free tier sleeps when idle, so the first request may take a moment.
 
 
 ## How to Run Locally
