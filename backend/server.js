@@ -99,7 +99,6 @@ app.post("/api/auth/register", async (req, res) => {
             VALUES (?, ?, ?)
         `).run(username, display_name, pw_hash);
     } catch (err) {
-        console.error("register insert failed:", err);
         // someone registered the same username between the check above and this insert
         if (db.isUniqueViolation(err)) {
             return res.status(409).json({error: "Username is already taken."});

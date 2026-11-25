@@ -1,5 +1,3 @@
-console.log("USAD loaded!");
-
 // ---------- elements ----------
 const addTaskButton = document.getElementById("add-task-button");
 const taskForm = document.getElementById("task-form");
@@ -694,7 +692,6 @@ taskForm.addEventListener("submit", async (event) => {
 
         if (!response.ok) {
             const data = await response.json().catch(() => ({}));
-            console.error("Save task failed:", editingID ? "PUT" : "POST", response.status, data, JSON.parse(body));
             throw new Error(data.error || "We couldn't save this task. Check the fields and try again.");
         }
 
