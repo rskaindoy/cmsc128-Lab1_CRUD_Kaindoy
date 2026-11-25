@@ -294,8 +294,6 @@ function showLogin() {
 async function showAuthenticated(user) {
     authSection.hidden = true;
     document.querySelector("main").hidden = false;
-
-    console.log("Logged in as:", user.display_name);
 }
 
 
